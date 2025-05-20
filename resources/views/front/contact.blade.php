@@ -46,7 +46,7 @@
             <div class="card p-4">
                 <h2 class="h6 mb-3 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-geo-alt-fill"></i> Our Location</h2>
                 <div class="w-100 ratio ratio-16x9"> {{-- Removed bg-light, d-flex, align-items-center, justify-content-center, text-muted --}}
-                    <iframe src="https://www.google.com/maps/embed?pb=!4v1746995028209!6m8!1m7!1sXYj2hT4be1UlgpyvypE5HQ!2m2!1d-7.919725369295303!2d111.9803514383337!3f117.05861973370553!4f-1.7012730877464861!5f0.4000000000000002" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d246.98515492578906!2d111.9803414012407!3d-7.919860659310218!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e78f9001c955deb%3A0xeeb357c589d4cdbf!2sPaayu%20Attire!5e0!3m2!1sen!2sid!4v1747732804837!5m2!1sen!2sid" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
         </section>
