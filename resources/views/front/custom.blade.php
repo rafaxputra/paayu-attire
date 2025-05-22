@@ -43,8 +43,8 @@
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="amount_to_buy" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cart"></i> Quantity to Buy</label> {{-- Added icon --}}
-                    <input type="number" name="amount_to_buy" id="amount_to_buy" class="form-control" placeholder="Enter quantity to buy" min="1" required>
+                    <label for="amount_to_buy" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cart"></i> Quantity to Buy (max 15)</label> {{-- Added icon and max limit text --}}
+                    <input type="number" name="amount_to_buy" id="amount_to_buy" class="form-control" placeholder="Enter quantity to buy" min="1" max="15" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">

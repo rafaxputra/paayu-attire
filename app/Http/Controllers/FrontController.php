@@ -239,7 +239,7 @@ class FrontController extends Controller
             'phone_number' => ['required', 'string', 'max:255'],
             'image_reference' => ['required', 'image', 'mimes:jpg,png', 'max:2048'], // Validate image file
             'kebaya_preference' => ['required', 'string'],
-            'amount_to_buy' => ['required', 'integer', 'min:1'], // Changed to amount_to_buy and integer/min:1 based on user feedback
+            'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'], // Added max:15 validation
             'date_needed' => ['required', 'date', 'after_or_equal:today'],
             'delivery_type' => ['required', 'string', 'in:pickup,delivery'], // Added validation for delivery_type
             'address' => ['nullable', 'required_if:delivery_type,delivery', 'string', 'max:255'], // Added validation for address
