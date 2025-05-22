@@ -31,6 +31,15 @@ class UserResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true), // Ensure email is unique, ignore current record on edit
+                Forms\Components\TextInput::make('phone_number')
+                    ->label('Phone Number')
+                    ->maxLength(255),
+                Forms\Components\Select::make('role')
+                    ->options([
+                        'admin' => 'Admin',
+                        'customer' => 'Customer',
+                    ])
+                    ->required(),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->required(fn (string $operation): bool => $operation === 'create') // Required only on create
@@ -51,6 +60,23 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('phone_number')
+                    ->label('Phone Number')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('role')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('google_id')
+                    ->label('Google ID')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('google_token')
+                    ->label('Google Token')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -61,7 +87,11 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('role')
+                    ->options([
+                        'admin' => 'Admin',
+                        'customer' => 'Customer',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

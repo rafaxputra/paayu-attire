@@ -9,7 +9,9 @@
         "filament/filament": "^3.3",
         "joshembling/image-optimizer": "^1.6",
         "laravel/framework": "^12.0",
+        "laravel/socialite": "^5.20",
         "laravel/tinker": "^2.9",
+        "laravel/ui": "^4.6",
         "openspout/openspout": "4.28.5"
     },
     "require-dev": {

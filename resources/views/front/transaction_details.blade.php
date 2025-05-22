@@ -14,6 +14,21 @@
             </button>
         </div>
         <section class="d-flex flex-column gap-4 px-3">
+            @if (session('success'))
+                <div class="alert alert-success" role="alert">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert-danger" role="alert">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="card p-4 d-flex flex-row align-items-center gap-3">
                 <div class="flex-shrink-0 rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                     <i class="bi bi-card-heading text-white fs-4"></i>
@@ -128,9 +143,49 @@
         </section>
         <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
             <div class="container main-content-container">
-                <div class="d-flex align-items-center justify-content-between p-3">
-                    <a href="https://wa.me/6285183004324" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Contact Customer Service</a> {{-- Added icon and flex/gap --}}
-                </div>
+                <ul class="nav justify-content-around py-3">
+                    <li class="nav-item">
+                        <a class="nav-link text-center text-muted" href="{{ route('front.index') }}">
+                             <div class="d-flex flex-column align-items-center">
+                                <i class="bi bi-house-door bottom-nav-icon"></i>
+                                <p class="mb-0" style="font-size: 0.8rem;">Browse</p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-center text-dark" href="{{ route('front.transactions') }}">
+                             <div class="d-flex flex-column align-items-center">
+                                <i class="bi bi-receipt-cutoff bottom-nav-icon"></i>
+                                <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        @guest
+                            <a class="nav-link text-center text-muted" href="{{ route('login') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                                </div>
+                            </a>
+                        @else
+                            <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                                </div>
+                            </a>
+                        @endguest
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="bi bi-person bottom-nav-icon"></i>
+                                <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </main>

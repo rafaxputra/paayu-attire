@@ -362,4 +362,56 @@ class FrontController extends Controller
 
     // Need to create methods for:
     // - Admin actions in Filament (will be in Filament resources)
+
+    // Socialite Methods
+    public function redirectToGoogle()
+    {
+        return \Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $user = \Socialite::driver('google')->user();
+
+            $findUser = \App\Models\User::where('google_id', $user->id)->first();
+
+            if ($findUser) {
+                \Auth::login($findUser);
+                return redirect()->intended(route('front.index')); // Redirect to intended page or home
+            } else {
+                // Check if a user with the same email already exists
+                $existingUser = \App\Models\User::where('email', $user->email)->first();
+
+                if ($existingUser) {
+                    // If user exists with the same email, link the Google account
+                    $existingUser->google_id = $user->id;
+                    $existingUser->google_token = $user->token;
+                    $existingUser->save();
+
+                    \Auth::login($existingUser);
+                    return redirect()->intended(route('front.index'));
+                } else {
+                    // Create a new user
+                    $newUser = \App\Models\User::create([
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'google_id' => $user->id,
+                        'google_token' => $user->token,
+                        'password' => \Hash::make(Str::random(16)), // Generate a random password
+                    ]);
+
+                    \Auth::login($newUser);
+                    return redirect()->intended(route('front.index'));
+                }
+            }
+        } catch (\Exception $e) {
+            // Log the error or handle it appropriately
+            \Log::error('Google login failed: ' . $e->getMessage());
+            return redirect(route('front.index'))->withErrors(['google_login' => 'Unable to login with Google. Please try again.']);
+        }
+    }
+
+    // Need to create methods for:
+    // - Admin actions in Filament (will be in Filament resources)
 }

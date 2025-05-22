@@ -75,12 +75,21 @@
                         </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                        </div>
-                    </a>
+                    @guest
+                        <a class="nav-link text-center text-muted" href="{{ route('login') }}">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                            </div>
+                        </a>
+                    @else
+                        <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                            </div>
+                        </a>
+                    @endguest
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-center text-dark" href="{{ route('front.contact') }}">

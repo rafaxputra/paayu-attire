@@ -7,14 +7,39 @@
 
 @section('content')
     <main class="main-content-container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4 px-3 pe-3"> {{-- Added pe-3 for right padding --}}
-            <a href="{{ route('front.index') }}" class="d-flex align-items-center ms-2"> {{-- Added ms-2 for margin-left --}}
-                <img id="paayu-logo" src="{{ asset('assets/images/logos/paayu_light_mode.png') }}" alt="Paayu Attire Logo" style="height: 30px;" /> {{-- Increased height --}}
+        <div class="d-flex justify-content-between align-items-center mb-4 px-3 pe-3">
+            <a href="{{ route('front.index') }}" class="d-flex align-items-center ms-2">
+                <img id="paayu-logo" src="{{ asset('assets/images/logos/paayu_light_mode.png') }}" alt="Paayu Attire Logo" style="height: 30px;" />
             </a>
-            {{-- Dark/Light Mode Toggle Button --}}
-            <button id="theme-toggle" class="btn p-0"> {{-- Added ID, removed text-dark class --}}
-                <i class="bi bi-moon fs-4"></i> {{-- Initial icon (moon for light mode) --}}
-            </button>
+            <div class="d-flex align-items-center gap-3"> {{-- Container for theme toggle and auth status --}}
+                {{-- Dark/Light Mode Toggle Button --}}
+                <button id="theme-toggle" class="btn p-0">
+                    <i class="bi bi-moon fs-4"></i>
+                </button>
+
+                @guest
+                    <a href="{{ route('login') }}" class="btn btn-outline-primary rounded-pill px-3 py-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </a>
+                @endguest
+
+                @auth
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary rounded-pill px-3 py-1 d-flex align-items-center gap-2 dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Hi, {{ Auth::user()->name }}! 👋
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li><a class="dropdown-item" href="{{ route('front.customer.dashboard') }}"><i class="bi bi-person-circle me-2"></i> Kelola Profil</a></li> {{-- Need to create this route --}}
+                            <li>
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i> Log Out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                @endauth
+            </div>
         </div>
         <!-- Search Bar -->
         <div class="px-3 mb-4">
@@ -91,30 +116,49 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-center text-muted" href="{{ route('front.transactions') }}">
-                             <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-receipt bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
+                        @guest
+                            <a class="nav-link text-center text-muted" href="{{ route('login') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-receipt bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
+                                </div>
+                            </a>
+                        @else
+                            <a class="nav-link text-center text-muted" href="{{ route('front.transactions') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-receipt bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
+                                </div>
+                            </a>
+                        @endguest
+                    </li>
+                    <li class="nav-item">
+                        @guest
+                            <a class="nav-link text-center text-muted" href="{{ route('login') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                                </div>
+                            </a>
+                        @else
+                            <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                                </div>
+                            </a>
+                        @endguest
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="bi bi-person bottom-nav-icon"></i>
+                                <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
                             </div>
                         </a>
                     </li>
-                    <li class="nav-item">
-                    <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                        </div>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-person bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
-                        </div>
-                    </a>
-                </li>
-            </ul>
+                </ul>
+            </div>
         </div>
     </main>
 @endsection

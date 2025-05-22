@@ -23,12 +23,12 @@
                 @csrf
                 <div class="d-flex flex-column gap-2">
                     <label for="full_name" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</label> {{-- Added icon --}}
-                    <input type="text" name="full_name" id="full_name" class="form-control" placeholder="Enter your full name" required>
+                    <input type="text" name="full_name" id="full_name" class="form-control" placeholder="Enter your full name" value="{{ old('full_name', Auth::user()->name ?? '') }}" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
                     <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label> {{-- Added icon --}}
-                    <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" required>
+                    <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', Auth::user()->phone_number ?? '') }}" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
@@ -97,12 +97,21 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-center text-dark" href="{{ route('front.custom') }}">
-                            <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                            </div>
-                        </a>
+                        @guest
+                            <a class="nav-link text-center text-muted" href="{{ route('login') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                                </div>
+                            </a>
+                        @else
+                            <a class="nav-link text-center text-dark" href="{{ route('front.custom') }}">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                                </div>
+                            </a>
+                        @endguest
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
