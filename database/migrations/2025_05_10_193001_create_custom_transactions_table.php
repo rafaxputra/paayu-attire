@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('trx_id')->unique();
             $table->string('name');
             $table->string('phone_number');
-            $table->text('image_reference')->nullable(); // Path to stored image
+            $table->string('image_reference')->nullable(); // Path to stored image
             $table->text('kebaya_preference');
             $table->integer('amount_to_buy'); // Changed to integer for quantity
             $table->date('date_needed');
