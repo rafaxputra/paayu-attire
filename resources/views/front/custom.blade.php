@@ -22,13 +22,13 @@
             <form action="{{ route('front.custom.order.store') }}" method="POST" enctype="multipart/form-data" class="card p-4 d-flex flex-column gap-4">
                 @csrf
                 <div class="d-flex flex-column gap-2">
-                    <label for="full_name" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</label>
-                    <input type="text" name="full_name" id="full_name" class="form-control" placeholder="Enter your full name" required>
+                    <label for="full_name" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</label> {{-- Added icon --}}
+                    <input type="text" name="full_name" id="full_name" class="form-control" placeholder="Enter your full name" value="{{ old('full_name', Auth::user()->name ?? '') }}" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label>
-                    <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" required>
+                    <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label> {{-- Added icon --}}
+                    <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', Auth::user()->phone_number ?? '') }}" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
