@@ -13,8 +13,8 @@
             </a>
             <p class="h5 mb-0 fw-semibold">Details</p>
             {{-- Dark/Light Mode Toggle Button --}}
-            <button id="theme-toggle" class="btn p-0"> {{-- Added ID --}}
-                <i class="bi bi-moon fs-4"></i> {{-- Initial icon (moon for light mode) --}}
+            <button id="theme-toggle" class="btn p-0">
+                <i class="bi bi-moon fs-4"></i>
             </button>
         </div>
         <section id="Thumbnail" class="d-flex flex-column align-items-center justify-content-center position-relative" style="height: 400px; padding-top: 0; padding-bottom: 66px; background-color: #F6F6F6;">
@@ -41,13 +41,14 @@
                 </div>
             </div>
             <div id="About" class="d-flex flex-column gap-2">
-                <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-book"></i> About</h2> {{-- Added icon --}}
-                <p class="mb-0">{{ $product->about }}</p>
+                <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-book"></i> About</h2>
+                {{-- ✅ Perubahan ada di sini --}}
+                <p class="mb-0">{!! $product->about !!}</p>
             </div>
         </section>
         <section id="Product-Info" class="d-flex flex-column mt-4 px-3 w-100 gap-4">
             <div id="Sizes" class="d-flex flex-column gap-3">
-                <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-arrows-fullscreen"></i> Available Sizes</h2> {{-- Added icon --}}
+                <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-arrows-fullscreen"></i> Available Sizes</h2>
                 <div class="d-flex flex-wrap gap-3">
                     @forelse ($product->productSizes as $size)
                         <div class="d-flex align-items-center gap-2 p-3 border border-secondary-subtle rounded-3">
@@ -67,7 +68,7 @@
                         <p class="fw-bold fs-5 mb-0">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                         <p class="mb-0" style="font-size: 0.9rem;">/day</p>
                     </div>
-                    <a href="{{ route('front.booking', $product->slug) }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2"><i class="bi bi-cart-plus"></i> Rent Now</a> {{-- Added icon and flex/gap --}}
+                    <a href="{{ route('front.booking', $product->slug) }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2"><i class="bi bi-cart-plus"></i> Rent Now</a>
                 </div>
             </div>
         </div>
