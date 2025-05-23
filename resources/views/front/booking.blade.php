@@ -91,67 +91,25 @@
                 <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label> {{-- Added icon --}}
                 <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', Auth::user()->phone_number ?? '') }}" required>
             </div>
-            <div class="d-flex flex-column gap-2">
-                <label for="delivery_type" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-truck"></i> Delivery Type</label> {{-- Added icon --}}
-                <select name="delivery_type" id="delivery_type" class="form-select" onchange="toggleAddressField()" required>
-                    <option value="pickup">Pickup</option>
-                    <option value="delivery">Delivery</option>
-                </select>
-            </div>
-            <div class="d-none flex-column gap-2" id="address-field">
-                <label for="address" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-house-door"></i> Delivery Address</label> {{-- Added icon --}}
-                <textarea name="address" id="address" class="form-control" rows="4" placeholder="Enter delivery address"></textarea>
-            </div>
 
-            <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
-                <div class="container main-content-container">
-                    <ul class="nav justify-content-around py-3">
-                        <li class="nav-item">
-                            <a class="nav-link text-center text-muted" href="{{ route('front.index') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-house-door bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Browse</p>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-center text-muted" href="{{ route('front.transactions') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-receipt bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            @guest
-                                <a class="nav-link text-center text-muted" href="{{ route('login') }}">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                        <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                    </div>
-                                </a>
-                            @else
-                                <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                        <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                    </div>
-                                </a>
-                            @endguest
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-person bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
-                                </div>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {{-- Removed Delivery Type Selection and Address Field --}}
+            <input type="hidden" name="delivery_type" value="pickup"> {{-- Set delivery_type to pickup by default --}}
+            <input type="hidden" name="address" value=""> {{-- Set address to empty by default --}}
+
         </form>
     </main>
+
+    <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
+        <div class="container main-content-container">
+            <div class="d-flex items-center justify-content-between p-3 relative z-10">
+                <div class="d-flex flex-column gap-1">
+                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">Total Harga</p> {{-- Added Total Harga text --}}
+                    <p id="Total" class="fw-bold fs-5 mb-0">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+                </div>
+                <button type="submit" form="booking-form" class="btn btn-primary rounded-pill px-4 py-2 fw-bold">Checkout</button> {{-- Added form attribute --}}
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('after-scripts')

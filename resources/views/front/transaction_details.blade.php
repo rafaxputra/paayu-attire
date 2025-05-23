@@ -38,6 +38,44 @@
                     <p class="text-muted mb-0" style="font-size: 0.9rem;">Protect your booking ID</p>
                 </div>
             </div>
+            @if ($details->status)
+                <div class="card p-3">
+                    <p class="fw-semibold mb-2">Progress Pemesanan</p>
+                    <div class="d-flex align-items-center justify-content-between position-relative" style="width: 100%; padding: 10px 0;">
+                        @php
+                            $statuses = ['pending', 'verified', 'in_process', 'ready'];
+                            $statusLabels = [
+                                'pending' => 'Menunggu Pembayaran',
+                                'verified' => 'Pembayaran Terverifikasi',
+                                'in_process' => $details->status === 'production_error' ? 'Kesalahan Produksi' : 'Pesanan dalam Proses Produksi',
+                                'ready' => 'Pesanan Bisa Diambil'
+                            ];
+                            $currentStatusIndex = array_search($details->status, ['pending', 'verified', 'in_process', 'production_error', 'ready']);
+                        @endphp
+
+                        @foreach ($statuses as $index => $status)
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="rounded-circle
+                                    @if ($status === 'in_process' && $details->status === 'production_error') bg-danger text-white
+                                    @elseif ($status === 'ready' && $details->status === 'production_error') bg-secondary text-dark
+                                    @elseif ($currentStatusIndex >= $index) bg-primary text-white
+                                    @else bg-secondary text-dark
+                                    @endif"
+                                    style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;">
+                                    {{ $index + 1 }}
+                                </div>
+                                <p class="text-center" style="font-size: 0.8rem; margin-top: 5px;">
+                                    {{ $statusLabels[$status] }}
+                                </p>
+                            </div>
+
+                            @if ($index < count($statuses) - 1)
+                                <div class="flex-grow-1 bg-secondary" style="height: 5px;"></div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             @if ($details->is_paid)
                 <div class="card p-3 d-flex flex-row align-items-center gap-3 bg-success text-white">
                     <div class="flex-shrink-0">
@@ -143,49 +181,9 @@
         </section>
         <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
             <div class="container main-content-container">
-                <ul class="nav justify-content-around py-3">
-                    <li class="nav-item">
-                        <a class="nav-link text-center text-muted" href="{{ route('front.index') }}">
-                             <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-house-door bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Browse</p>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-center text-dark" href="{{ route('front.transactions') }}">
-                             <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-receipt-cutoff bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        @guest
-                            <a class="nav-link text-center text-muted" href="{{ route('login') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                </div>
-                            </a>
-                        @else
-                            <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                </div>
-                            </a>
-                        @endguest
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
-                            <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-person bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
-                            </div>
-                        </a>
-                    </li>
-                </ul>
+                <div class="d-flex align-items-center justify-content-between p-3">
+                    <a href="https://wa.me/6285183004324" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Contact Customer Service</a> {{-- Added icon and flex/gap --}}
+                </div>
             </div>
         </div>
     </main>

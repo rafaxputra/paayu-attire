@@ -43,21 +43,11 @@ class RentalTransactionResource extends Resource
                     ->required(),
                 Forms\Components\DatePicker::make('ended_at')
                     ->required(),
-                Forms\Components\Select::make('delivery_type') // Changed to Select
-                    ->options([
-                        'pickup' => 'Pickup',
-                        'delivery' => 'Delivery',
-                    ])
-                    ->required(),
-                Forms\Components\Textarea::make('address')
-                    ->columnSpanFull(),
                 Forms\Components\TextInput::make('total_amount')
                     ->required()
                     ->numeric()
                     ->prefix('IDR')
                     ->disabled(), // Total amount should not be editable
-                Forms\Components\Toggle::make('is_paid')
-                    ->required(),
                 Forms\Components\FileUpload::make('payment_proof') // Changed to FileUpload
                     ->image()
                     ->directory('payment_proofs') // Store in payment_proofs directory
@@ -69,12 +59,11 @@ class RentalTransactionResource extends Resource
                     ]),
                 Forms\Components\Select::make('status') // Changed to Select
                     ->options([
-                        'pending' => 'Pending',
-                        'pending_payment_verification' => 'Pending Payment Verification',
-                        'paid' => 'Paid',
-                        'in_progress' => 'In Progress',
-                        'completed' => 'Completed',
-                        'cancelled' => 'Cancelled',
+                        'pending' => 'Menunggu Pembayaran',
+                        'verified' => 'Pembayaran Terverifikasi',
+                        'in_process' => 'Pesanan dalam Proses Produksi',
+                        'production_error' => 'Kesalahan Produksi', // Tetap bagian dari tahap ke-3
+                        'ready' => 'Pesanan Bisa Diambil',
                     ])
                     ->required()
                     ->default('pending'),
@@ -101,15 +90,10 @@ class RentalTransactionResource extends Resource
                 Tables\Columns\TextColumn::make('ended_at')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('delivery_type')
-                    ->searchable()
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state)), // Capitalize first letter
                 Tables\Columns\TextColumn::make('total_amount')
                     ->numeric()
                     ->sortable()
                     ->money('IDR'), // Format as currency
-                Tables\Columns\IconColumn::make('is_paid')
-                    ->boolean(),
                 Tables\Columns\ImageColumn::make('payment_proof') // Changed to ImageColumn
                     ->label('Payment Proof'),
                 Tables\Columns\TextColumn::make('payment_method')
@@ -119,11 +103,11 @@ class RentalTransactionResource extends Resource
                     ->badge() // Display status as a badge
                     ->color(fn (string $state): string => match ($state) { // Add color coding
                         'pending' => 'warning',
-                        'pending_payment_verification' => 'info',
-                        'paid' => 'success',
-                        'in_progress' => 'primary',
-                        'completed' => 'success',
-                        'cancelled' => 'danger',
+                        'verified' => 'info', // Assuming 'verified' is a status
+                        'in_process' => 'primary',
+                        'production_error' => 'danger', // Assuming 'production_error' is a status
+                        'ready' => 'success',
+                        'cancelled' => 'danger', // Assuming 'cancelled' is a status
                         default => 'secondary',
                     }),
                 Tables\Columns\TextColumn::make('created_at')
@@ -140,19 +124,7 @@ class RentalTransactionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('markAsPaid')
-                    ->label('Mark as Paid')
-                    ->button()
-                    ->color('success')
-                    ->icon('heroicon-o-currency-dollar')
-                    ->requiresConfirmation()
-                    ->visible(fn (RentalTransaction $record): bool => !$record->is_paid) // Only show if not already paid
-                    ->action(function (RentalTransaction $record) {
-                        $record->update([
-                            'is_paid' => true,
-                            'status' => 'paid',
-                        ]);
-                    }),
+                // Removed markAsPaid action
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
