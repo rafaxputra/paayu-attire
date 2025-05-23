@@ -237,7 +237,8 @@ class FrontController extends Controller
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:255'],
-            'image_reference' => ['required', 'image', 'mimes:jpg,png', 'max:2048'], // Validate image file
+            'image_reference' => ['required', 'array'],
+            'image_reference.*' => ['required', 'image', 'mimes:jpg,png', 'max:2048'], // Validate image file
             'kebaya_preference' => ['required', 'string'],
             'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'], // Added max:15 validation
             'date_needed' => ['required', 'date', 'after_or_equal:today'],
@@ -260,10 +261,11 @@ class FrontController extends Controller
         unset($validatedData['full_name']);
 
         // Store the image
-        $imagePath = $request->file('image_reference')
-            ->store('custom_kebaya_references', 'public')
-            ->optimize('webp'); // Optimize to webp
-        $validatedData['image_reference'] = $imagePath;
+        $imagePaths = [];
+        foreach ($request->file('image_reference') as $image) {
+            $path = $image->store('custom_kebaya_references', 'public');
+        $imagePaths[] = $path; // bisa gunakan webp converter jika tersedia
+        }
 
         // Generate unique transaction ID
         $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8); // Example format

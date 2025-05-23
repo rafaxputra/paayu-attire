@@ -32,9 +32,9 @@
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="image_reference" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-image"></i> Kebaya Image Reference</label>
-                    <input type="file" name="image_reference" id="image_reference" class="form-control" accept=".jpg,.png" required>
-                    <small class="form-text text-muted">Accepted formats: JPG, PNG</small>
+                    <label for="image_reference" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-image"></i> Kebaya Image Reference</label> {{-- Added icon --}}
+                    <input type="file" name="image_reference[]" id="image_reference" class="form-control" accept=".jpg,.png" multiple required>
+                    <small class="form-text text-muted">Upload up to 3 images (JPG, PNG only)</small>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
