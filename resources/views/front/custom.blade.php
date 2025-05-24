@@ -22,19 +22,19 @@
             <form action="{{ route('front.custom.order.store') }}" method="POST" enctype="multipart/form-data" class="card p-4 d-flex flex-column gap-4">
                 @csrf
                 <div class="d-flex flex-column gap-2">
-                    <label for="full_name" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</label>
-                    <input type="text" name="full_name" id="full_name" class="form-control" placeholder="Enter your full name" required>
+                    <label for="full_name" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</label> {{-- Added icon --}}
+                    <input type="text" name="full_name" id="full_name" class="form-control" placeholder="Enter your full name" value="{{ old('full_name', Auth::user()->name ?? '') }}" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label>
-                    <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" required>
+                    <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label> {{-- Added icon --}}
+                    <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', Auth::user()->phone_number ?? '') }}" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
                     <label for="image_reference" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-image"></i> Kebaya Image Reference</label> {{-- Added icon --}}
-                    <input type="file" name="image_reference" id="image_reference" class="form-control" accept=".jpg,.png" required>
-                    <small class="form-text text-muted">Accepted formats: JPG, PNG</small>
+                    <input type="file" name="image_reference[]" id="image_reference" class="form-control" accept=".jpg,.png" multiple required>
+                    <small class="form-text text-muted">Upload up to 3 images (JPG, PNG only)</small>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
@@ -43,8 +43,8 @@
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="amount_to_buy" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cart"></i> Quantity to Buy</label>
-                    <input type="number" name="amount_to_buy" id="amount_to_buy" class="form-control" placeholder="Enter quantity to buy" min="1" required>
+                    <label for="amount_to_buy" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cart"></i> Quantity to Buy (max 15)</label> {{-- Added icon and max limit text --}}
+                    <input type="number" name="amount_to_buy" id="amount_to_buy" class="form-control" placeholder="Enter quantity to buy" min="1" max="15" required>
                 </div>
 
                 <div class="d-flex flex-column gap-2">

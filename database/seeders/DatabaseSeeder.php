@@ -15,7 +15,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             ContactInformationSeeder::class,
-            ProductSeeder::class, // Call the new ProductSeeder
         ]);
 
         // Create or find a test user
