@@ -234,15 +234,17 @@ class FrontController extends Controller
     // New method to store Custom Kebaya Order
     public function storeCustomOrder(Request $request)
     {
+        \Log::error('Custom Order Request:', $request->all());
+
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:255'],
-            'image_reference' => ['required', 'image', 'mimes:jpg,png', 'max:2048'], // Validate image file
+            'image_reference_1' => ['required', 'image', 'mimes:jpg,png', 'max:2048'],
+            'image_reference_2' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
+            'image_reference_3' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
             'kebaya_preference' => ['required', 'string'],
-            'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'], // Added max:15 validation
+            'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'],
             'date_needed' => ['required', 'date', 'after_or_equal:today'],
-            'delivery_type' => ['required', 'string', 'in:pickup,delivery'], // Added validation for delivery_type
-            'address' => ['nullable', 'required_if:delivery_type,delivery', 'string', 'max:255'], // Added validation for address
         ]);
 
         $validatedData = $request->only([
@@ -251,29 +253,35 @@ class FrontController extends Controller
             'kebaya_preference',
             'amount_to_buy',
             'date_needed',
-            'delivery_type', // Added delivery_type to validated data
-            'address', // Added address to validated data
         ]);
 
-        // Map 'full_name' from the form to the 'name' column in the database
         $validatedData['name'] = $validatedData['full_name'];
         unset($validatedData['full_name']);
 
-        // Store the image
-        $imagePath = $request->file('image_reference')
-        ->store('custom_kebaya_references', 'public')
-        ->optimize('webp');
-        $validatedData['image_reference'] = $imagePath;
+        // Upload gambar 1 wajib
+        // Upload gambar 1 wajib
+        $image1 = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
+        $validatedData['image_reference'] = $image1; // <-- cocokkan dengan nama kolom di DB
 
-        // Generate unique transaction ID
-        $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8); // Example format
+        // Upload gambar 2 & 3 jika ada
+        if ($request->hasFile('image_reference_2')) {
+            $validatedData['image_reference_2'] = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
+        }
 
-        // Create CustomTransaction
+        if ($request->hasFile('image_reference_3')) {
+            $validatedData['image_reference_3'] = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
+        }
+
+
+        // Generate trx_id
+        $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8);
+
+        // Simpan ke DB
         $customTransaction = CustomTransaction::create($validatedData);
 
-        // Redirect to a success page or custom details page
-        return redirect()->route('front.custom.success', $customTransaction->trx_id); // Need to define this route and view
+        return redirect()->route('front.custom.success', $customTransaction->trx_id);
     }
+
 
     // New method for Contact page
     public function contact()

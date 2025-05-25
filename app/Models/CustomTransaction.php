@@ -15,11 +15,11 @@ class CustomTransaction extends Model
         'name',
         'phone_number',
         'image_reference',
+        'image_reference_2',
+        'image_reference_3',
         'kebaya_preference',
         'amount_to_buy',
         'date_needed',
-        'delivery_type', // Added delivery_type
-        'address', // Added address
         'admin_price',
         'admin_estimated_completion_date',
         'status',
@@ -27,6 +27,7 @@ class CustomTransaction extends Model
         'payment_proof',
         'payment_method',
     ];
+
 
     protected $casts = [
         'date_needed' => 'date',
