@@ -45,7 +45,7 @@
                 </ul>
             </div>
         @endif
-        <form action="{{ route('front.booking_save', $product->slug) }}" method="POST" class="d-flex flex-column gap-4 px-3">
+        <form id="booking-form" action="{{ route('front.booking_save', $product->slug) }}" method="POST" class="d-flex flex-column gap-4 px-3">
             @csrf
             <input type="hidden" value="{{ $product->price }}" id="productPrice" />
             <div class="d-flex justify-content-between align-items-center">
@@ -91,10 +91,6 @@
                 <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label> {{-- Added icon --}}
                 <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', Auth::user()->phone_number ?? '') }}" required>
             </div>
-
-            {{-- Removed Delivery Type Selection and Address Field --}}
-            <input type="hidden" name="delivery_type" value="pickup"> {{-- Set delivery_type to pickup by default --}}
-            <input type="hidden" name="address" value=""> {{-- Set address to empty by default --}}
 
         </form>
     </main>
