@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Models\User; // Import User model
 
 class CustomTransactionResource extends Resource
 {
@@ -28,6 +29,11 @@ class CustomTransactionResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->disabled(), // Transaction ID should not be editable
+                Forms\Components\Select::make('user_id') // Added user_id field
+                    ->relationship('user', 'name') // Link to User model, display name
+                    ->required()
+                    ->searchable()
+                    ->preload(),
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -36,11 +42,23 @@ class CustomTransactionResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\FileUpload::make('image_reference')
+                    ->label('Image Reference 1')
                     ->image()
                     ->optimize('webp')
                     ->directory('custom_kebaya_references') // Store in custom_kebaya_references directory
-                    ->visibility('public') // Make publicly accessible
                     ->disabled(), // Image reference should not be editable after creation
+                Forms\Components\FileUpload::make('image_reference_2') // Added image_reference_2 field
+                    ->label('Image Reference 2')
+                    ->image()
+                    ->optimize('webp')
+                    ->directory('custom_kebaya_references') // Store in custom_kebaya_references directory
+                    ->nullable(), // Make nullable as per database
+                Forms\Components\FileUpload::make('image_reference_3') // Added image_reference_3 field
+                    ->label('Image Reference 3')
+                    ->image()
+                    ->optimize('webp')
+                    ->directory('custom_kebaya_references') // Store in custom_kebaya_references directory
+                    ->nullable(), // Make nullable as per database
                 Forms\Components\Textarea::make('kebaya_preference')
                     ->required()
                     ->columnSpanFull()
@@ -63,14 +81,14 @@ class CustomTransactionResource extends Resource
                 Forms\Components\Select::make('status') // Changed to Select
                     ->options(\App\Enums\CustomTransactionStatus::class) // Use enum for options
                     ->required()
-                    ->default('pending'),
+                    ->default(CustomTransactionStatus::PENDING), // Use enum default
                 Forms\Components\Toggle::make('is_paid')
-                    ->required(), // is_paid can now be toggled directly
+                    ->required()
+                    ->disabled(), // Disable is_paid toggle in the form
                 Forms\Components\FileUpload::make('payment_proof') // Changed to FileUpload
                     ->image()
                     ->optimize('webp')
                     ->directory('custom_payment_proofs') // Store in custom_payment_proofs directory
-                    ->visibility('public') // Make publicly accessible
                     ->disabled(), // Payment proof should not be editable after upload
                 Forms\Components\Select::make('payment_method') // Changed to Select
                     ->options([
@@ -87,11 +105,20 @@ class CustomTransactionResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('trx_id')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('user.name') // Display user's name
+                    ->label('User Name')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone_number')
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('image_reference'),
+                Tables\Columns\ImageColumn::make('image_reference')
+                    ->label('Ref Image 1'), // Added label
+                Tables\Columns\ImageColumn::make('image_reference_2') // Added image_reference_2 to table
+                    ->label('Ref Image 2'), // Added label
+                Tables\Columns\ImageColumn::make('image_reference_3') // Added image_reference_3 to table
+                    ->label('Ref Image 3'), // Added label
                 Tables\Columns\TextColumn::make('amount_to_buy')
                     ->label('Quantity')
                     ->numeric()
@@ -107,12 +134,12 @@ class CustomTransactionResource extends Resource
                     ->date()
                     ->sortable(),
 
-                // Delivery Info Columns
-                Tables\Columns\TextColumn::make('delivery_type')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('address')
-                    ->searchable(),
+                // Removed Delivery Info Columns
+                // Tables\Columns\TextColumn::make('delivery_type')
+                //     ->searchable()
+                //     ->sortable(),
+                // Tables\Columns\TextColumn::make('address')
+                //     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->searchable()
                     ->badge(), // Display status as a badge, Filament will use the enum's HasColor and HasLabel
@@ -142,9 +169,9 @@ class CustomTransactionResource extends Resource
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
-                    ->visible(fn (CustomTransaction $record): bool => $record->status === 'pending') // Only show if status is pending
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING) // Use enum
                     ->action(function (CustomTransaction $record) {
-                        $record->update(['status' => 'accepted']);
+                        $record->update(['status' => CustomTransactionStatus::ACCEPTED]); // Use enum
                     }),
                 Tables\Actions\Action::make('rejectOrder')
                     ->label('Reject Order')
@@ -152,9 +179,32 @@ class CustomTransactionResource extends Resource
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()
-                    ->visible(fn (CustomTransaction $record): bool => $record->status === 'pending') // Only show if status is pending
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING) // Use enum
                     ->action(function (CustomTransaction $record) {
-                        $record->update(['status' => 'rejected']);
+                        $record->update(['status' => CustomTransactionStatus::REJECTED]); // Use enum - assuming REJECTED exists or needs to be added
+                    }),
+                Tables\Actions\Action::make('verifyPayment')
+                    ->label('Verify Payment')
+                    ->button()
+                    ->color('success')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->requiresConfirmation()
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING_PAYMENT && !$record->is_paid) // Visible when pending payment and not paid
+                    ->action(function (CustomTransaction $record) {
+                        $record->update([
+                            'is_paid' => true,
+                            'status' => CustomTransactionStatus::IN_PROGRESS, // Change status to In Progress after payment verification
+                        ]);
+                    }),
+                Tables\Actions\Action::make('markAsCompleted')
+                    ->label('Mark as Completed')
+                    ->button()
+                    ->color('success')
+                    ->icon('heroicon-o-check-badge')
+                    ->requiresConfirmation()
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::IN_PROGRESS) // Visible when in progress
+                    ->action(function (CustomTransaction $record) {
+                        $record->update(['status' => CustomTransactionStatus::COMPLETED]); // Use enum
                     }),
             ])
             ->bulkActions([

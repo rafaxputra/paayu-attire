@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\StorePaymentRequest;
 use App\Models\Comment;
-use App\Models\ContactInformation;
 use App\Models\CustomTransaction;
 use App\Models\Product;
 use App\Models\RentalTransaction;
@@ -14,9 +13,15 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str; // Import Str for generating unique IDs
+use App\Enums\CustomTransactionStatus; // Import the enum
 
 class FrontController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->only(['booking_save', 'storeCustomOrder', 'uploadCustomPaymentProof', 'cancelCustomOrder', 'approveCustomOrder', 'getComments', 'storeComment']);
+    }
+
     public function index(Request $request) // Inject Request
     {
         // Fetch all unique product sizes for the filter dropdown
@@ -67,15 +72,9 @@ class FrontController extends Controller
         return view('front.booking', compact('product'));
     }
 
-    public function booking_save(Request $request, Product $product) // Changed Request type hint
+    public function booking_save(StoreBookingRequest $request, Product $product) // Changed Request type hint to StoreBookingRequest
     {
-        $request->validate([
-            'duration' => ['required', 'integer', 'min:1'],
-            'started_at' => ['required', 'date', 'after_or_equal:today'],
-            'product_size_id' => ['required', 'exists:product_sizes,id'], // Validate selected size
-            'name' => ['required', 'string', 'max:255'], // Added name validation
-            'phone_number' => ['required', 'string', 'max:255'], // Added phone_number validation
-        ]);
+        // Validation is now handled by StoreBookingRequest
 
         $productSize = $product->productSizes()->findOrFail($request->product_size_id);
 
@@ -93,6 +92,7 @@ class FrontController extends Controller
         DB::transaction(function () use ($request, $product, $productSize, $duration, $startedDate, $endedDate, $totalAmount, &$rentalTransaction) {
             $rentalTransaction = RentalTransaction::create([
                 'trx_id' => 'RENTAL-' . Str::random(8), // Generate unique transaction ID
+                'user_id' => Auth::id(), // Associate with authenticated user
                 'product_id' => $product->id,
                 'name' => $request->name,
                 'phone_number' => $request->phone_number,
@@ -100,7 +100,7 @@ class FrontController extends Controller
                 'ended_at' => $endedDate,
 
                 'total_amount' => $totalAmount,
-                'status' => 'pending', // Initial status
+                'status' => CustomTransactionStatus::PENDING, // Initial status using enum
             ]);
 
             // Decrement stock
@@ -134,14 +134,9 @@ class FrontController extends Controller
         return view('front.checkout', compact('product', 'rentalTransaction', 'subTotal', 'grandTotal', 'bankAccounts'));
     }
 
-    public function checkout_store(Request $request) // Changed Request type hint
+    public function checkout_store(StorePaymentRequest $request) // Changed Request type hint to StorePaymentRequest
     {
-        $request->validate([
-            'transaction_id' => ['required', 'exists:rental_transactions,trx_id'], // Validate transaction ID
-            'payment_proof' => ['required', 'image', 'mimes:jpg,png', 'max:2048'], // Validate image file
-            'payment_method' => ['required', 'string', 'in:BCA,BRI'], // Validate payment method
-            'confirm_payment' => ['accepted'], // Validate checkbox
-        ]);
+        // Validation is now handled by StorePaymentRequest
 
         $rentalTransaction = RentalTransaction::where('trx_id', $request->transaction_id)->firstOrFail();
 
@@ -152,7 +147,7 @@ class FrontController extends Controller
         $rentalTransaction->update([
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
-            'status' => 'pending_payment_verification', // New status for admin verification
+            'status' => 'pending_payment_verification', // New status for admin verification - Consider using an enum if this status is common
         ]);
 
         // Redirect to the success booking page with the transaction ID
@@ -253,7 +248,6 @@ class FrontController extends Controller
         unset($validatedData['full_name']);
 
         // Upload gambar 1 wajib
-        // Upload gambar 1 wajib
         $image1 = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
         $validatedData['image_reference'] = $image1; // <-- cocokkan dengan nama kolom di DB
 
@@ -263,9 +257,10 @@ class FrontController extends Controller
         }
 
         if ($request->hasFile('image_reference_3')) {
-            $validatedData['image_reference_3'] = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
+            $validatedData['image_reference_3'] = $request->file('custom_kebaya_references')->store('custom_kebaya_references', 'public');
         }
 
+        $validatedData['user_id'] = Auth::id(); // Associate with authenticated user
 
         // Generate trx_id
         $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8);
@@ -280,8 +275,7 @@ class FrontController extends Controller
     // New method for Contact page
     public function contact()
     {
-        $contactInfo = ContactInformation::first(); // Assuming only one row for contact info
-        return view('front.contact', compact('contactInfo'));
+        return view('front.contact');
     }
 
     // New method for Custom transaction details page
@@ -318,17 +312,16 @@ class FrontController extends Controller
         ]);
 
 
-
         // Store the payment proof
         $proofPath = $request->file('payment_proof')
-            ->store('custom_payment_proofs', 'public')
-            ->optimize('webp'); // Optimize to webp
+            ->store('custom_payment_proofs', 'public');
+            // ->optimize('webp'); // Optimize to webp - requires spatie/laravel-image-optimizer or similar
 
         // Update the custom transaction
         $customTransaction->update([
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
-            'status' => \App\Enums\CustomTransactionStatus::PENDING_PAYMENT, // Changed status to PENDING_PAYMENT enum
+            'status' => CustomTransactionStatus::PENDING_PAYMENT, // Changed status to PENDING_PAYMENT enum
         ]);
 
         return back()->with('success', 'Payment proof uploaded successfully. Waiting for admin verification.');
@@ -338,8 +331,8 @@ class FrontController extends Controller
     public function cancelCustomOrder(CustomTransaction $customTransaction) // Added CustomTransaction type hint
     {
         // Allow cancellation only if status is pending or accepted
-        if ($customTransaction->status === 'pending' || $customTransaction->status === 'accepted') {
-            $customTransaction->update(['status' => 'cancelled']);
+        if ($customTransaction->status === CustomTransactionStatus::PENDING->value || $customTransaction->status === CustomTransactionStatus::ACCEPTED->value) {
+            $customTransaction->update(['status' => CustomTransactionStatus::CANCELLED]);
             return back()->with('success', 'Custom order cancelled successfully.');
         }
 
@@ -350,8 +343,8 @@ class FrontController extends Controller
     public function approveCustomOrder(CustomTransaction $customTransaction)
     {
         // Allow approval only if status is accepted and not paid
-        if ($customTransaction->status->value === 'accepted') {
-            $customTransaction->status = \App\Enums\CustomTransactionStatus::PENDING_PAYMENT;
+        if ($customTransaction->status->value === CustomTransactionStatus::ACCEPTED->value) {
+            $customTransaction->status = CustomTransactionStatus::PENDING_PAYMENT;
             $customTransaction->save();
             return redirect()->route('front.custom.details', $customTransaction->trx_id)->with('success', 'Order approved. Please proceed with payment.');
         }
@@ -360,7 +353,7 @@ class FrontController extends Controller
         return back()->withErrors(['error' => 'Custom order cannot be approved at this stage.']);
     }
 
-    
+
     // Need to create methods for:
     // - Admin actions in Filament (will be in Filament resources)
 
@@ -435,7 +428,8 @@ class FrontController extends Controller
         }
 
         Comment::create([
-            'name' => $userName, // Gunakan nama user yang login
+            'user_id' => Auth::id(), // Associate with authenticated user ID
+            'name' => $userName, // Keep name for now, might be used in frontend
             'comment' => $request->comment,
             'image' => $imagePath,
         ]);

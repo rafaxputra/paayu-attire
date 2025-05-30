@@ -24,6 +24,9 @@ class Product extends Model
         'slug',
         'thumbnail',
         'about',
+        'material', // Added material
+        'color', // Added color
+        'size_chart', // Added size_chart
         'price',
     ];
 

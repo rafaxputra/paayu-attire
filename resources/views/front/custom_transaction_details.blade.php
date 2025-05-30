@@ -43,20 +43,14 @@
             <p class="fw-semibold mb-2">Order Progress</p>
             <div class="d-flex align-items-center justify-content-between">
                 @php
-                    $statuses = ['pending', 'payment', 'in_progress', 'completed'];
-                    $statusLabels = [
-                        'pending' => $details->status->value === 'rejected' ? 'Pesanan Ditolak' : 'Menunggu Persetujuan Admin',
-                        'payment' => 'Pembayaran',
-                        'in_progress' => 'Pesanan Diproses',
-                        'completed' => 'Pesanan Selesai'
-                    ];
-                    $currentStatusIndex = $details->status->value === 'accepted' ? 1 : ($details->status->value === 'rejected' ? 0 : array_search($details->status->value, $statuses));
+                    $statuses = [\App\Enums\CustomTransactionStatus::PENDING, \App\Enums\CustomTransactionStatus::PENDING_PAYMENT, \App\Enums\CustomTransactionStatus::IN_PROGRESS, \App\Enums\CustomTransactionStatus::COMPLETED];
+                    $currentStatusIndex = $details->getProgressStepIndex();
                 @endphp
 
                 @foreach ($statuses as $index => $status)
                     <div class="d-flex flex-column align-items-center">
                         <div class="rounded-circle
-                            @if ($status === 'pending' && $details->status->value === 'rejected') bg-danger text-white
+                            @if ($status === \App\Enums\CustomTransactionStatus::PENDING && $details->status === \App\Enums\CustomTransactionStatus::REJECTED) bg-danger text-white
                             @elseif ($currentStatusIndex >= $index) bg-primary text-white
                             @else bg-secondary text-dark
                             @endif"
@@ -64,7 +58,11 @@
                             {{ $index + 1 }}
                         </div>
                         <p class="text-center" style="font-size: 0.8rem;">
-                            {{ $statusLabels[$status] }}
+                            @if ($status === \App\Enums\CustomTransactionStatus::PENDING && $details->status === \App\Enums\CustomTransactionStatus::REJECTED)
+                                Pesanan Ditolak
+                            @else
+                                {{ $status->getLabel() }}
+                            @endif
                         </p>
                     </div>
 
@@ -73,7 +71,7 @@
         </div>
 
         {{-- Menampilkan informasi pembayaran setelah pesanan diterima --}}
-        @if ($details->status->value === 'accepted')
+        @if ($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED)
             <section class="d-flex flex-column gap-4">
                 <h2 class="h5 fw-semibold"><i class="bi bi-wallet"></i> Payment Details</h2>
                 <div class="card p-3">
@@ -85,7 +83,7 @@
                             <i class="bi bi-bank fs-5"></i>
                             <p class="fw-semibold mb-0">Bank BCA: 5545011970 a/n Niken Alfinanda Putri</p>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-items-center gap-2">
                             <i class="bi bi-bank fs-5"></i>
                             <p class="fw-semibold mb-0">Bank BRI: 626801015467534 a/n Niken Alfinanda Putri</p>
                         </div>
@@ -144,15 +142,6 @@
                             <p class="fw-semibold mb-0">{{ $details->phone_number }}</p>
                         </div>
                     </div>
-                     @if($details->delivery_type == 'delivery')
-                        <div class="d-flex flex-column gap-2">
-                            <p class="fw-semibold mb-0">Delivery Address</p>
-                            <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                                <i class="bi bi-house-door fs-5"></i>
-                                <p class="fw-semibold mb-0">{{ $details->address }}</p>
-                            </div>
-                        </div>
-                    @endif
                 </div>
             </section>
 
@@ -191,7 +180,7 @@
                 </div>
                 </section>
 
-            @if($details->status->value === 'accepted' || $details->status->value === 'in_progress' || $details->status->value === 'completed' || $details->status->value === 'pending_payment' || $details->status->value === 'pending_payment_verification')
+            @if($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED || $details->status === \App\Enums\CustomTransactionStatus::IN_PROGRESS || $details->status === \App\Enums\CustomTransactionStatus::COMPLETED || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION)
                 <section class="d-flex flex-column gap-4">
                     <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-chat-dots"></i> Admin Response</h2> {{-- Added icon --}}
                     @if($details->admin_price)
@@ -209,37 +198,26 @@
                 </section>
             @endif
 
-            {{-- Show Delivery Info if status is completed --}}
-            @if($details->status->value === 'completed')
+            {{-- Show Pickup Info if status is completed --}}
+            @if($details->status === \App\Enums\CustomTransactionStatus::COMPLETED)
                 <section class="d-flex flex-column gap-4">
-                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-truck"></i> Delivery Information</h2> {{-- Added icon --}}
-                    @if($details->delivery_type === 'pickup')
-                        <div class="d-flex flex-column gap-2">
-                            <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-building"></i> Pickup Location:</p> {{-- Added icon --}}
-                            <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                                <i class="bi bi-building fs-5"></i>
-                                <div class="d-flex flex-column gap-1">
-                                    <p class="fw-semibold mb-0">Main Business Address</p>
-                                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
-                                </div>
+                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2> {{-- Changed icon and label --}}
+                    <div class="d-flex flex-column gap-2">
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-building"></i> Pickup Location:</p> {{-- Added icon --}}
+                        <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
+                            <i class="bi bi-building fs-5"></i>
+                            <div class="d-flex flex-column gap-1">
+                                <p class="fw-semibold mb-0">Main Business Address</p>
+                                <p class="text-muted mb-0" style="font-size: 0.9rem;">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
                             </div>
                         </div>
-                    @else {{-- delivery --}}
-                         <div class="d-flex flex-column gap-2">
-                            <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-house-door"></i> Delivery Address:</p> {{-- Added icon --}}
-                            <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                                <i class="bi bi-house-door fs-5"></i>
-                                <div class="d-flex flex-column gap-1">
-                                    <p class="fw-semibold mb-0">{{ $details->address }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+                    </div>
                 </section>
             @endif
 
+
             {{-- Show Approve/Cancel buttons if status is accepted and not paid --}}
-            @if($details->status->value === 'accepted' && !$details->is_paid)
+            @if($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED && !$details->is_paid)
                 <section class="d-flex flex-column gap-4">
                     <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-question-circle"></i> Action Required</h2> {{-- Added icon --}}
                     <p class="mb-0">Your custom order has been accepted with the details above. Please approve to proceed to payment or cancel the order.</p>
@@ -258,7 +236,7 @@
             @endif
 
             {{-- Show payment instructions and upload form if status is pending_payment and not paid --}}
-            @if($details->status->value === 'pending_payment' && !$details->is_paid)
+            @if($details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT && !$details->is_paid)
                 <section class="d-flex flex-column gap-4">
                     <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-wallet"></i> Payment</h2> {{-- Added icon --}}
                     <p class="mb-0">Please make the payment of Rp {{ Number::format($details->admin_price, locale: 'id') }} to one of the following accounts:</p>
@@ -302,7 +280,7 @@
                 </section>
             @endif
 
-            @if($details->payment_proof && $details->status->value !== 'pending_payment') {{-- Show uploaded proof if exists and not in pending_payment state --}}
+            @if($details->payment_proof && $details->status !== \App\Enums\CustomTransactionStatus::PENDING_PAYMENT) {{-- Show uploaded proof if exists and not in pending_payment state --}}
                 <div class="d-flex flex-column gap-2">
                     <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-image"></i> Uploaded Payment Proof</h2>
                     <img src="{{ Storage::url($details->payment_proof) }}" alt="Payment Proof" class="img-fluid rounded-md">
@@ -325,7 +303,7 @@
             @endif
 
             {{-- Keep Cancel button visible for pending status --}}
-            @if($details->status->value === 'pending')
+            @if($details->status === \App\Enums\CustomTransactionStatus::PENDING)
                 <section class="d-flex flex-column gap-4">
                     <form action="{{ route('front.custom.cancel', $details->id) }}" method="POST">
                         @csrf

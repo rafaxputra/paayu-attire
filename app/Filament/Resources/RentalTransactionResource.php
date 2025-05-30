@@ -6,12 +6,14 @@ use App\Filament\Resources\RentalTransactionResource\Pages;
 use App\Filament\Resources\RentalTransactionResource\RelationManagers;
 use App\Models\RentalTransaction;
 use Filament\Forms;
+use App\Enums\RentalTransactionStatus; // Import the enum
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Models\User; // Import User model
 
 class RentalTransactionResource extends Resource
 {
@@ -27,6 +29,11 @@ class RentalTransactionResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->disabled(), // Transaction ID should not be editable
+                Forms\Components\Select::make('user_id') // Added user_id field
+                    ->relationship('user', 'name') // Link to User model, display name
+                    ->required()
+                    ->searchable()
+                    ->preload(),
                 Forms\Components\Select::make('product_id') // Changed to Select
                     ->relationship('product', 'name') // Use relationship to display product name
                     ->required()
@@ -51,22 +58,21 @@ class RentalTransactionResource extends Resource
                 Forms\Components\FileUpload::make('payment_proof') // Changed to FileUpload
                     ->image()
                     ->directory('payment_proofs') // Store in payment_proofs directory
-                    ->visibility('public'), // Make publicly accessible
+                    ->visibility('public')
+                    ->disabled(), // Payment proof should not be editable after upload
                 Forms\Components\Select::make('payment_method') // Changed to Select
                     ->options([
                         'BCA' => 'BCA',
                         'BRI' => 'BRI',
-                    ]),
-                Forms\Components\Select::make('status') // Changed to Select
-                    ->options([
-                        'pending' => 'Menunggu Pembayaran',
-                        'verified' => 'Pembayaran Terverifikasi',
-                        'in_process' => 'Pesanan dalam Proses Produksi',
-                        'production_error' => 'Kesalahan Produksi', // Tetap bagian dari tahap ke-3
-                        'ready' => 'Pesanan Bisa Diambil',
                     ])
+                    ->disabled(), // Payment method should not be editable after upload
+                Forms\Components\Select::make('status') // Changed to Select
+                    ->options(RentalTransactionStatus::class) // Use enum for options
                     ->required()
-                    ->default('pending'),
+                    ->default(RentalTransactionStatus::PENDING), // Use enum default
+                Forms\Components\Toggle::make('is_paid')
+                    ->required()
+                    ->disabled(), // Disable is_paid toggle in the form
             ]);
     }
 
@@ -76,6 +82,10 @@ class RentalTransactionResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('trx_id')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('user.name') // Display user's name
+                    ->label('User Name')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('product.name') // Display product name
                     ->label('Product Name')
                     ->searchable()
@@ -100,16 +110,9 @@ class RentalTransactionResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->searchable()
-                    ->badge() // Display status as a badge
-                    ->color(fn (string $state): string => match ($state) { // Add color coding
-                        'pending' => 'warning',
-                        'verified' => 'info', // Assuming 'verified' is a status
-                        'in_process' => 'primary',
-                        'production_error' => 'danger', // Assuming 'production_error' is a status
-                        'ready' => 'success',
-                        'cancelled' => 'danger', // Assuming 'cancelled' is a status
-                        default => 'secondary',
-                    }),
+                    ->badge(), // Display status as a badge, Filament will use the enum's HasColor and HasLabel
+                Tables\Columns\IconColumn::make('is_paid')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -124,7 +127,69 @@ class RentalTransactionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                // Removed markAsPaid action
+                Tables\Actions\Action::make('acceptOrder')
+                    ->label('Accept Order')
+                    ->button()
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
+                    ->requiresConfirmation()
+                    ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::PENDING) // Use enum
+                    ->action(function (RentalTransaction $record) {
+                        $record->update(['status' => RentalTransactionStatus::ACCEPTED]); // Use enum
+                    }),
+                Tables\Actions\Action::make('rejectOrder')
+                    ->label('Reject Order')
+                    ->button()
+                    ->color('danger')
+                    ->icon('heroicon-o-x-circle')
+                    ->requiresConfirmation()
+                    ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::PENDING) // Use enum
+                    ->action(function (RentalTransaction $record) {
+                        $record->update(['status' => RentalTransactionStatus::REJECTED]); // Use enum
+                    }),
+                Tables\Actions\Action::make('verifyPayment')
+                    ->label('Verify Payment')
+                    ->button()
+                    ->color('success')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->requiresConfirmation()
+                    ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::PENDING_PAYMENT && !$record->is_paid) // Visible when pending payment and not paid
+                    ->action(function (RentalTransaction $record) {
+                        $record->update([
+                            'is_paid' => true,
+                            'status' => RentalTransactionStatus::PAID, // Change status to Paid after payment verification
+                        ]);
+                    }),
+                 Tables\Actions\Action::make('markAsInRental')
+                    ->label('Mark as In Rental')
+                    ->button()
+                    ->color('primary')
+                    ->icon('heroicon-o-truck')
+                    ->requiresConfirmation()
+                    ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::PAID) // Visible when paid
+                    ->action(function (RentalTransaction $record) {
+                        $record->update(['status' => RentalTransactionStatus::IN_RENTAL]); // Use enum
+                    }),
+                Tables\Actions\Action::make('markAsCompleted')
+                    ->label('Mark as Completed')
+                    ->button()
+                    ->color('success')
+                    ->icon('heroicon-o-check-badge')
+                    ->requiresConfirmation()
+                    ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::IN_RENTAL) // Visible when in rental
+                    ->action(function (RentalTransaction $record) {
+                        $record->update(['status' => RentalTransactionStatus::COMPLETED]); // Use enum
+                    }),
+                 Tables\Actions\Action::make('cancelOrder')
+                    ->label('Cancel Order')
+                    ->button()
+                    ->color('danger')
+                    ->icon('heroicon-o-x-circle')
+                    ->requiresConfirmation()
+                    ->visible(fn (RentalTransaction $record): bool => $record->status !== RentalTransactionStatus::COMPLETED && $record->status !== RentalTransactionStatus::CANCELLED && $record->status !== RentalTransactionStatus::REJECTED) // Visible unless completed, cancelled, or rejected
+                    ->action(function (RentalTransaction $record) {
+                        $record->update(['status' => RentalTransactionStatus::CANCELLED]); // Use enum
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

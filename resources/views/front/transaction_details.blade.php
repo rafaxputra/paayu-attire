@@ -43,21 +43,30 @@
                     <p class="fw-semibold mb-2">Progress Pemesanan</p>
                     <div class="d-flex align-items-center justify-content-between position-relative" style="width: 100%; padding: 10px 0;">
                         @php
-                            $statuses = ['pending', 'verified', 'in_process', 'ready'];
+                            // Using the RentalTransactionStatus enum for clarity
+                            $statuses = [\App\Enums\RentalTransactionStatus::PENDING, \App\Enums\RentalTransactionStatus::PAID, \App\Enums\RentalTransactionStatus::IN_RENTAL, \App\Enums\RentalTransactionStatus::COMPLETED];
                             $statusLabels = [
-                                'pending' => 'Menunggu Pembayaran',
-                                'verified' => 'Pembayaran Terverifikasi',
-                                'in_process' => $details->status === 'production_error' ? 'Kesalahan Produksi' : 'Pesanan dalam Proses Produksi',
-                                'ready' => 'Pesanan Bisa Diambil'
+                                \App\Enums\RentalTransactionStatus::PENDING->value => 'Menunggu Pembayaran',
+                                \App\Enums\RentalTransactionStatus::PAID->value => 'Pembayaran Terverifikasi',
+                                \App\Enums\RentalTransactionStatus::IN_RENTAL->value => 'Dalam Penyewaan',
+                                \App\Enums\RentalTransactionStatus::COMPLETED->value => 'Selesai'
                             ];
-                            $currentStatusIndex = array_search($details->status, ['pending', 'verified', 'in_process', 'production_error', 'ready']);
+                            // Map current status to the simplified progress steps
+                            $currentStatusIndex = match ($details->status) {
+                                \App\Enums\RentalTransactionStatus::PENDING, \App\Enums\RentalTransactionStatus::REJECTED, \App\Enums\RentalTransactionStatus::CANCELLED => 0,
+                                \App\Enums\RentalTransactionStatus::ACCEPTED, \App\Enums\RentalTransactionStatus::PENDING_PAYMENT => 0, // Still waiting for payment
+                                \App\Enums\RentalTransactionStatus::PAID => 1,
+                                \App\Enums\RentalTransactionStatus::IN_RENTAL => 2,
+                                \App\Enums\RentalTransactionStatus::COMPLETED => 3,
+                                default => 0, // Fallback
+                            };
                         @endphp
 
                         @foreach ($statuses as $index => $status)
                             <div class="d-flex flex-column align-items-center">
                                 <div class="rounded-circle
-                                    @if ($status === 'in_process' && $details->status === 'production_error') bg-danger text-white
-                                    @elseif ($status === 'ready' && $details->status === 'production_error') bg-secondary text-dark
+                                    @if ($details->status === \App\Enums\RentalTransactionStatus::REJECTED && $index === 0) bg-danger text-white
+                                    @elseif ($details->status === \App\Enums\RentalTransactionStatus::CANCELLED && $index === 0) bg-danger text-white
                                     @elseif ($currentStatusIndex >= $index) bg-primary text-white
                                     @else bg-secondary text-dark
                                     @endif"
@@ -65,7 +74,13 @@
                                     {{ $index + 1 }}
                                 </div>
                                 <p class="text-center" style="font-size: 0.8rem; margin-top: 5px;">
-                                    {{ $statusLabels[$status] }}
+                                     @if ($details->status === \App\Enums\RentalTransactionStatus::REJECTED && $index === 0)
+                                        Ditolak
+                                    @elseif ($details->status === \App\Enums\RentalTransactionStatus::CANCELLED && $index === 0)
+                                        Dibatalkan
+                                    @else
+                                        {{ $statusLabels[$status->value] ?? $status->getLabel() }}
+                                    @endif
                                 </p>
                             </div>
 
@@ -144,28 +159,6 @@
                             <p class="fw-semibold mb-0">{{ $details->ended_at->format('d m Y') }}</p>
                         </div>
                     </div>
-                    @if ($details->delivery_type == 'pickup')
-                        <div class="d-flex flex-column gap-2">
-                            <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-building"></i> Pickup Location</p> {{-- Added icon --}}
-                            <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                                <i class="bi bi-building fs-5"></i>
-                                <div class="d-flex flex-column gap-1">
-                                    <p class="fw-semibold mb-0">Main Business Address</p>
-                                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <div class="d-flex flex-column gap-2">
-                            <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-house-door"></i> Home Deliver to</p> {{-- Added icon --}}
-                            <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                                <i class="bi bi-house-door fs-5"></i>
-                                <div class="d-flex flex-column gap-1">
-                                    <p class="fw-semibold mb-0">{{ $details->address }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
                 </div>
             </section>
             <hr class="my-3">
@@ -178,6 +171,24 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Show Pickup Info if status is completed --}}
+            @if($details->status === \App\Enums\RentalTransactionStatus::COMPLETED)
+                <section class="d-flex flex-column gap-4">
+                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2> {{-- Changed icon and label --}}
+                    <div class="d-flex flex-column gap-2">
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-building"></i> Pickup Location:</p> {{-- Added icon --}}
+                        <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
+                            <i class="bi bi-building fs-5"></i>
+                            <div class="d-flex flex-column gap-1">
+                                <p class="fw-semibold mb-0">Main Business Address</p>
+                                <p class="text-muted mb-0" style="font-size: 0.9rem;">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            @endif
+
         </section>
         <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
             <div class="container main-content-container">

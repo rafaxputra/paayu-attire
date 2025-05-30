@@ -16,7 +16,8 @@ class User extends Authenticatable implements FilamentUser // Implement Filament
     // Add the canAccessPanel method
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        // Only allow users with the 'admin' role to access the Filament panel
+        return $this->role === 'admin';
     }
 
     /**
@@ -55,5 +56,21 @@ class User extends Authenticatable implements FilamentUser // Implement Filament
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the rental transactions for the user.
+     */
+    public function rentalTransactions()
+    {
+        return $this->hasMany(RentalTransaction::class);
+    }
+
+    /**
+     * Get the custom transactions for the user.
+     */
+    public function customTransactions()
+    {
+        return $this->hasMany(CustomTransaction::class);
     }
 }

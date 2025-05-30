@@ -14,18 +14,11 @@ class CustomerController extends Controller
     {
         $user = Auth::user();
 
-        // Fetch rental transactions for the logged-in user
-        $rentalTransactions = RentalTransaction::where('name', $user->name)
-                                                ->where('phone_number', $user->phone_number) // Assuming phone_number is also stored on the user or can be linked
-                                                ->with('product')
-                                                ->latest()
-                                                ->get();
+        // Fetch rental transactions for the logged-in user using the relationship
+        $rentalTransactions = $user->rentalTransactions()->with('product')->latest()->get();
 
-        // Fetch custom transactions for the logged-in user
-        $customTransactions = CustomTransaction::where('name', $user->name)
-                                                ->where('phone_number', $user->phone_number) // Assuming phone_number is also stored on the user or can be linked
-                                                ->latest()
-                                                ->get();
+        // Fetch custom transactions for the logged-in user using the relationship
+        $customTransactions = $user->customTransactions()->latest()->get();
 
         return view('front.customer.dashboard', compact('rentalTransactions', 'customTransactions'));
     }

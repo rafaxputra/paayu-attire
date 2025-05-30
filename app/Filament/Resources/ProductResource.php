@@ -32,6 +32,18 @@ class ProductResource extends Resource
                     ->required()
                     ->maxLength(1024),
 
+                Forms\Components\Textarea::make('material') // Added material field
+                    ->label('Material/Bahan')
+                    ->maxLength(1024),
+
+                Forms\Components\TextInput::make('color') // Added color field
+                    ->label('Color')
+                    ->maxLength(255),
+
+                Forms\Components\Textarea::make('size_chart') // Added size_chart field
+                    ->label('Size Chart')
+                    ->maxLength(1024),
+
                 Forms\Components\TextInput::make('price')
                     ->required()
                     ->numeric()
@@ -80,6 +92,10 @@ class ProductResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\ImageColumn::make('thumbnail'),
+
+                Tables\Columns\TextColumn::make('color') // Added color to table
+                    ->label('Color')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('price')
                     ->money('IDR') // Assuming price is stored as a number and should be formatted

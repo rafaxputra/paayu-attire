@@ -12,6 +12,7 @@ class CustomTransaction extends Model
 
     protected $fillable = [
         'trx_id',
+        'user_id', // Added user_id to fillable
         'name',
         'phone_number',
         'image_reference',
@@ -26,6 +27,7 @@ class CustomTransaction extends Model
         'is_paid',
         'payment_proof',
         'payment_method',
+        // Removed 'delivery_type' and 'address'
     ];
 
 
@@ -47,8 +49,31 @@ class CustomTransaction extends Model
         $this->attributes['admin_price'] = $value;
 
         // If the status is 'accepted' and admin_price is set, change status to 'in_progress'
-        if ($this->status === 'accepted' && !is_null($value)) {
-            $this->attributes['status'] = 'in_progress';
+        // The 'in_progress' status is already in the CustomTransactionStatus enum
+        if ($this->status === CustomTransactionStatus::ACCEPTED && !is_null($value)) { // Compare with enum instance
+            $this->attributes['status'] = CustomTransactionStatus::IN_PROGRESS; // Use enum case
         }
+    }
+
+    /**
+     * Get the current step index for the progress indicator.
+     *
+     * @return int
+     */
+    public function getProgressStepIndex(): int
+    {
+        return match ($this->status) {
+            CustomTransactionStatus::PENDING, CustomTransactionStatus::REJECTED => 0,
+            CustomTransactionStatus::ACCEPTED, CustomTransactionStatus::PENDING_PAYMENT => 1,
+            CustomTransactionStatus::IN_PROGRESS => 2,
+            CustomTransactionStatus::COMPLETED => 3,
+            CustomTransactionStatus::CANCELLED => 0, // Or a different step if needed for cancelled
+        };
+    }
+
+    // Define the relationship with the User model
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

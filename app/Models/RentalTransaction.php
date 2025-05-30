@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RentalTransactionStatus; // Import the enum
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,13 +12,14 @@ class RentalTransaction extends Model
 
     protected $fillable = [
         'trx_id',
+        'user_id', // Added user_id to fillable
         'product_id',
         'name',
         'phone_number',
         'started_at',
         'ended_at',
-        'delivery_type',
-        'address',
+        // Removed 'delivery_type',
+        // Removed 'address',
         'total_amount',
         'is_paid',
         'payment_proof',
@@ -29,10 +31,17 @@ class RentalTransaction extends Model
         'started_at' => 'date',
         'ended_at' => 'date',
         'is_paid' => 'boolean',
+        'status' => RentalTransactionStatus::class, // Cast status to the enum
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    // Define the relationship with the User model
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
