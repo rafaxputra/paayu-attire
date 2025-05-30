@@ -126,10 +126,6 @@
                 </div>
                 <div class="flex-grow-1 d-flex flex-column gap-2">
                     <p class="fw-bold mb-0">{{ $details->product->name }}</p>
-                    {{-- Display product description --}}
-                    @if($details->product->description)
-                        <p class="text-muted mb-0" style="font-size: 0.9rem;">{{ $details->product->description }}</p>
-                    @endif
                 </div>
             </div>
             <section class="d-flex flex-column gap-4">
