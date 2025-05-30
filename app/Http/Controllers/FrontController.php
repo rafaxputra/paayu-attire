@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\StorePaymentRequest;
+use App\Models\Comment;
 use App\Models\ContactInformation;
 use App\Models\CustomTransaction;
 use App\Models\Product;
 use App\Models\RentalTransaction;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,8 +72,6 @@ class FrontController extends Controller
         $request->validate([
             'duration' => ['required', 'integer', 'min:1'],
             'started_at' => ['required', 'date', 'after_or_equal:today'],
-            'delivery_type' => ['required', 'string', 'in:pickup,delivery'],
-            'address' => ['nullable', 'required_if:delivery_type,delivery', 'string', 'max:255'],
             'product_size_id' => ['required', 'exists:product_sizes,id'], // Validate selected size
             'name' => ['required', 'string', 'max:255'], // Added name validation
             'phone_number' => ['required', 'string', 'max:255'], // Added phone_number validation
@@ -98,10 +98,8 @@ class FrontController extends Controller
                 'phone_number' => $request->phone_number,
                 'started_at' => $startedDate,
                 'ended_at' => $endedDate,
-                'delivery_type' => $request->delivery_type,
-                'address' => $request->address,
+
                 'total_amount' => $totalAmount,
-                'is_paid' => false,
                 'status' => 'pending', // Initial status
             ]);
 
@@ -146,10 +144,6 @@ class FrontController extends Controller
         ]);
 
         $rentalTransaction = RentalTransaction::where('trx_id', $request->transaction_id)->firstOrFail();
-
-        if ($rentalTransaction->is_paid) {
-            return back()->withErrors(['error' => 'This transaction has already been paid.']);
-        }
 
         // Store the payment proof
         $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
@@ -234,15 +228,17 @@ class FrontController extends Controller
     // New method to store Custom Kebaya Order
     public function storeCustomOrder(Request $request)
     {
+        \Log::error('Custom Order Request:', $request->all());
+
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:255'],
-            'image_reference' => ['required', 'image', 'mimes:jpg,png', 'max:2048'], // Validate image file
+            'image_reference_1' => ['required', 'image', 'mimes:jpg,png', 'max:2048'],
+            'image_reference_2' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
+            'image_reference_3' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
             'kebaya_preference' => ['required', 'string'],
-            'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'], // Added max:15 validation
+            'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'],
             'date_needed' => ['required', 'date', 'after_or_equal:today'],
-            'delivery_type' => ['required', 'string', 'in:pickup,delivery'], // Added validation for delivery_type
-            'address' => ['nullable', 'required_if:delivery_type,delivery', 'string', 'max:255'], // Added validation for address
         ]);
 
         $validatedData = $request->only([
@@ -251,29 +247,35 @@ class FrontController extends Controller
             'kebaya_preference',
             'amount_to_buy',
             'date_needed',
-            'delivery_type', // Added delivery_type to validated data
-            'address', // Added address to validated data
         ]);
 
-        // Map 'full_name' from the form to the 'name' column in the database
         $validatedData['name'] = $validatedData['full_name'];
         unset($validatedData['full_name']);
 
-        // Store the image
-        $imagePath = $request->file('image_reference')
-            ->store('custom_kebaya_references', 'public')
-            ->optimize('webp'); // Optimize to webp
-        $validatedData['image_reference'] = $imagePath;
+        // Upload gambar 1 wajib
+        // Upload gambar 1 wajib
+        $image1 = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
+        $validatedData['image_reference'] = $image1; // <-- cocokkan dengan nama kolom di DB
 
-        // Generate unique transaction ID
-        $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8); // Example format
+        // Upload gambar 2 & 3 jika ada
+        if ($request->hasFile('image_reference_2')) {
+            $validatedData['image_reference_2'] = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
+        }
 
-        // Create CustomTransaction
+        if ($request->hasFile('image_reference_3')) {
+            $validatedData['image_reference_3'] = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
+        }
+
+
+        // Generate trx_id
+        $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8);
+
+        // Simpan ke DB
         $customTransaction = CustomTransaction::create($validatedData);
 
-        // Redirect to a success page or custom details page
-        return redirect()->route('front.custom.success', $customTransaction->trx_id); // Need to define this route and view
+        return redirect()->route('front.custom.success', $customTransaction->trx_id);
     }
+
 
     // New method for Contact page
     public function contact()
@@ -315,9 +317,7 @@ class FrontController extends Controller
             'confirm_payment' => ['accepted'], // Validate checkbox
         ]);
 
-        if ($customTransaction->is_paid) {
-            return back()->withErrors(['error' => 'This custom order has already been paid.']);
-        }
+
 
         // Store the payment proof
         $proofPath = $request->file('payment_proof')
@@ -329,7 +329,6 @@ class FrontController extends Controller
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
             'status' => \App\Enums\CustomTransactionStatus::PENDING_PAYMENT, // Changed status to PENDING_PAYMENT enum
-            'is_paid' => false, // Ensure is_paid is false until admin verification
         ]);
 
         return back()->with('success', 'Payment proof uploaded successfully. Waiting for admin verification.');
@@ -351,15 +350,17 @@ class FrontController extends Controller
     public function approveCustomOrder(CustomTransaction $customTransaction)
     {
         // Allow approval only if status is accepted and not paid
-        if ($customTransaction->status->value === 'accepted' && !$customTransaction->is_paid) {
+        if ($customTransaction->status->value === 'accepted') {
             $customTransaction->status = \App\Enums\CustomTransactionStatus::PENDING_PAYMENT;
             $customTransaction->save();
             return redirect()->route('front.custom.details', $customTransaction->trx_id)->with('success', 'Order approved. Please proceed with payment.');
         }
 
+
         return back()->withErrors(['error' => 'Custom order cannot be approved at this stage.']);
     }
 
+    
     // Need to create methods for:
     // - Admin actions in Filament (will be in Filament resources)
 
@@ -411,6 +412,37 @@ class FrontController extends Controller
             return redirect(route('front.index'))->withErrors(['google_login' => 'Unable to login with Google. Please try again.']);
         }
     }
+
+    public function getComments()
+    {
+        $comments = Comment::latest()->get(); // Ambil semua komentar, urutkan dari terbaru
+        return view('front.contact', compact('comments'));
+    }
+
+    public function storeComment(Request $request)
+    {
+        $request->validate([
+            'comment' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
+        ]);
+
+        // Ambil nama user yang login
+        $userName = Auth::user()->name;
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('comment_images', 'public');
+        }
+
+        Comment::create([
+            'name' => $userName, // Gunakan nama user yang login
+            'comment' => $request->comment,
+            'image' => $imagePath,
+        ]);
+
+        return back()->with('success', 'Komentar berhasil dikirim!');
+    }
+
 
     // Need to create methods for:
     // - Admin actions in Filament (will be in Filament resources)

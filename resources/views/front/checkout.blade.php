@@ -69,17 +69,6 @@
                         <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Write your phone number" value="{{ $rentalTransaction->phone_number }}" required>
                     </div>
                 </div>
-                 @if($rentalTransaction->delivery_type == 'delivery')
-                    <div class="d-flex flex-column gap-2">
-                        <label for="address" class="form-label fw-semibold mb-0">Delivery Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-house-door"></i>
-                            </span>
-                            <textarea name="address" id="address" class="form-control" rows="4" placeholder="Write your delivery address" required>{{ $rentalTransaction->address }}</textarea>
-                        </div>
-                    </div>
-                @endif
             </div>
             <hr class="mx-3 my-3">
             <div id="Payment-details" class="d-flex flex-column gap-3">
@@ -140,53 +129,9 @@
                 </div>
             @endif
 
-            <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
-                <div class="container main-content-container">
-                    <ul class="nav justify-content-around py-3">
-                        <li class="nav-item">
-                            <a class="nav-link text-center text-muted" href="{{ route('front.index') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-house-door bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Browse</p>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-center text-muted" href="{{ route('front.transactions') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-receipt bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            @guest
-                                <a class="nav-link text-center text-muted" href="{{ route('login') }}">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                        <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                    </div>
-                                </a>
-                            @else
-                                <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                        <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                    </div>
-                                </a>
-                            @endguest
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-person bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
-                                </div>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            @csrf
+    <button type="submit" class="btn btn-primary">Checkout</button>
+            
         </form>
     </main>
 @endsection

@@ -9,14 +9,14 @@
             </a>
             <p class="h5 mb-0 fw-semibold">Custom Kebaya Order</p>
             {{-- Dark/Light Mode Toggle Button --}}
-            <button id="theme-toggle" class="btn p-0"> {{-- Added ID --}}
-                <i class="bi bi-moon fs-4"></i> {{-- Initial icon (moon for light mode) --}}
+            <button id="theme-toggle" class="btn p-0">
+                <i class="bi bi-moon fs-4"></i>
             </button>
         </div>
         <section class="d-flex flex-column gap-4 mt-4 px-3">
-            <div class="d-flex flex-column gap-2 align-items-center text-center mb-4"> {{-- Added margin-bottom --}}
-                <h1 class="h4 fw-bold mb-2">Order Your Custom Kebaya</h1> {{-- Added margin-bottom --}}
-                <p class="text-muted mb-0">Fill out the form below to order a custom kebaya.</p> {{-- Added margin-bottom --}}
+            <div class="d-flex flex-column gap-2 align-items-center text-center mb-4">
+                <h1 class="h4 fw-bold mb-2">Order Your Custom Kebaya</h1>
+                <p class="text-muted mb-0">Fill out the form below to order a custom kebaya.</p>
             </div>
 
             <form action="{{ route('front.custom.order.store') }}" method="POST" enctype="multipart/form-data" class="card p-4 d-flex flex-column gap-4">
@@ -32,13 +32,16 @@
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="image_reference" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-image"></i> Kebaya Image Reference</label> {{-- Added icon --}}
-                    <input type="file" name="image_reference" id="image_reference" class="form-control" accept=".jpg,.png" required>
-                    <small class="form-text text-muted">Accepted formats: JPG, PNG</small>
+                    <label class="form-label fw-semibold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-image"></i> Kebaya Image Reference
+                    </label>
+                    <input type="file" name="image_reference_1" class="form-control" accept=".jpg,.png" required>
+                    <input type="file" name="image_reference_2" class="form-control" accept=".jpg,.png">
+                    <input type="file" name="image_reference_3" class="form-control" accept=".jpg,.png">
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="kebaya_preference" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-file-text"></i> Describe Kebaya Preference</label> {{-- Added icon --}}
+                    <label for="kebaya_preference" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-file-text"></i> Describe Kebaya Preference</label>
                     <textarea name="kebaya_preference" id="kebaya_preference" class="form-control" rows="4" placeholder="Describe your desired kebaya, materials, details, etc." required></textarea>
                 </div>
 
@@ -48,34 +51,19 @@
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="date_needed" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Date Kebaya Needed</label> {{-- Added icon --}}
+                    <label for="date_needed" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Date Kebaya Needed</label>
                     <input type="date" name="date_needed" id="date_needed" class="form-control" required>
                 </div>
 
-                {{-- Delivery Type Selection --}}
-                <div class="d-flex flex-column gap-2">
-                    <label for="delivery_type" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-truck"></i> Delivery Type</label>
-                    <select name="delivery_type" id="delivery_type" class="form-select" required>
-                        <option value="pickup">Pickup at Store</option>
-                        <option value="delivery">Home Delivery</option>
-                    </select>
-                </div>
-
-                {{-- Address Field (initially hidden) --}}
-                <div id="address-field" class="d-flex flex-column gap-2 d-none"> {{-- Added d-none class --}}
-                    <label for="address" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-house-door"></i> Delivery Address</label>
-                    <textarea name="address" id="address" class="form-control" rows="4" placeholder="Enter your delivery address"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-check-circle"></i> Submit Custom Order</button> {{-- Added icon and flex/gap --}}
+                <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-check-circle"></i> Submit Custom Order</button>
             </form>
         </section>
 
         @push('after-scripts')
-        <script src="{{ asset('customjs/custom.js') }}"></script> {{-- Include custom.js --}}
+        <script src="{{ asset('customjs/custom.js') }}"></script>
         @endpush
 
-        <div class="mb-5"></div> {{-- Added margin to push content above fixed navbar --}}
+        <div class="mb-5"></div>
 
         <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
             <div class="container main-content-container">
@@ -97,21 +85,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        @guest
-                            <a class="nav-link text-center text-muted" href="{{ route('login') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                </div>
-                            </a>
-                        @else
-                            <a class="nav-link text-center text-dark" href="{{ route('front.custom') }}">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                    <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                                </div>
-                            </a>
-                        @endguest
+                        <a class="nav-link text-center text-dark" href="{{ route('front.custom') }}">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="bi bi-pencil-square bottom-nav-icon"></i>
+                                <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
+                            </div>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">

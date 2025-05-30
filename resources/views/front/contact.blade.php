@@ -54,6 +54,50 @@
         <div class="p-3">
             <a href="https://wa.me/6285183004324?text={{ urlencode('Hello, I would like to inquire about Paayu Attire services.') }}" class="btn btn-success rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> WhatsApp Consultation</a>
         </div>
+        
+        <div class="card p-4 mt-4">
+            <h2 class="h6 mb-3 fw-semibold d-flex align-items-center gap-2">
+                <i class="bi bi-chat-dots"></i> Kolom Komentar
+            </h2>
+
+            {{-- Form untuk menambah komentar --}}
+            @if(Auth::check())  
+                <form action="{{ route('front.contact.comment') }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+                    @csrf
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-chat-text"></i></span>
+                        <textarea name="comment" class="form-control" placeholder="Tulis komentar Anda..." required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-image"></i></span>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-send"></i> Kirim Komentar
+                    </button>
+                </form>
+            @else
+                <p class="text-muted">Anda harus <a href="{{ route('login') }}">login</a> untuk mengirim komentar.</p>
+            @endif
+
+            {{-- Daftar komentar --}}
+            <div class="mt-4">
+                <h3 class="h6 fw-semibold mb-2">Komentar Pengguna</h3>
+                <div class="d-flex flex-column gap-3">
+                    @foreach ($comments as $comment)
+                        <div class="p-3 border rounded">
+                            <p class="fw-bold mb-1">{{ $comment->name }}</p>
+                            <p class="mb-0 text-muted">{{ $comment->comment }}</p>
+                            @if ($comment->image)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/' . $comment->image) }}" alt="Comment Image" class="img-fluid rounded" style="max-width: 150px;">
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
 
         <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
             <div class="container main-content-container">

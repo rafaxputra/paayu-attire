@@ -11,7 +11,7 @@
                 <h1 class="h4 fw-bold">Custom Order Submitted!</h1>
                 <p class="text-muted mb-0">Your custom kebaya order has been successfully submitted. Please save your Order ID:</p>
                 <div class="d-flex align-items-center gap-3 justify-content-center"> {{-- Centered content --}}
-                    <p id="orderId" class="fs-5 fw-bold text-white mb-0">{{ $transaction->trx_id }}</p> {{-- Added ID for copying --}} {{-- Added text-white class for dark mode visibility --}}
+                    <p id="orderId" class="fs-5 fw-bold text-black mb-0">{{ $transaction->trx_id }}</p> {{-- Added ID for copying --}} {{-- Added text-white class for dark mode visibility --}}
                     <button class="btn btn-sm btn-outline-secondary" onclick="copyOrderId()">
                         <i class="bi bi-clipboard"></i> Copy
                     </button>

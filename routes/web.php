@@ -52,6 +52,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout'); // Ad
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('front.auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
+// Comment User
+Route::get('/contact', [FrontController::class, 'getComments'])->name('front.contact');
+Route::post('/contact/comment', [FrontController::class, 'storeComment'])->middleware('auth')->name('front.contact.comment');
+
 // Authenticated Customer Routes
 Route::middleware(['auth'])->name('front.customer.')->group(function () {
     Route::get('/customer/dashboard', [CustomerController::class, 'customerDashboard'])->name('dashboard');

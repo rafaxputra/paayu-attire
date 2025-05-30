@@ -39,45 +39,93 @@
                 </div>
             </div>
 
-            <div class="card p-3 d-flex flex-row align-items-center gap-3
-                @if($details->status == 'pending') bg-warning text-dark
-                @elseif($details->status == 'accepted') bg-success text-white
-                @elseif($details->status == 'rejected') bg-danger text-white
-                @else bg-secondary text-white @endif">
-                <div class="flex-shrink-0">
-                    @if($details->status == 'pending')
-                        <i class="bi bi-clock fs-4"></i>
-                    @elseif($details->status == 'accepted')
-                         <i class="bi bi-check-circle fs-4"></i>
-                    @elseif($details->status == 'rejected')
-                         <i class="bi bi-x-circle fs-4"></i>
-                    @else
-                         <i class="bi bi-info-circle fs-4"></i>
-                    @endif
-                </div>
-                <div class="flex-grow-1 d-flex flex-column gap-1">
-                    <p class="fw-semibold mb-0" style="font-size: 0.9rem;">Status: {{ $details->status->getLabel() }}</p>
-                    <p class="mb-0" style="font-size: 0.8rem;">
-                        @if($details->status->value == 'pending')
-                            Your custom order request is pending review by our team.
-                        @elseif($details->status->value == 'accepted')
-                            Your custom order has been accepted. Please review the details below.
-                        @elseif($details->status->value == 'rejected')
-                            Your custom order has been rejected. Please contact customer service for more information.
-                        @elseif($details->status->value == 'in_progress')
-                            Your custom order is currently in progress.
-                        @elseif($details->status->value == 'completed')
-                            Your custom order is completed and ready for pickup/delivery.
-                        @elseif($details->status->value == 'cancelled')
-                            Your custom order has been cancelled.
-                        @elseif($details->status->value == 'pending_payment')
-                            Your custom order is pending payment. Please complete the payment below.
-                        @elseif($details->status->value == 'pending_payment_verification')
-                            Your payment proof has been uploaded. Waiting for admin verification.
-                        @endif
-                    </p>
-                </div>
+        <div class="card p-3">
+            <p class="fw-semibold mb-2">Order Progress</p>
+            <div class="d-flex align-items-center justify-content-between">
+                @php
+                    $statuses = ['pending', 'payment', 'in_progress', 'completed'];
+                    $statusLabels = [
+                        'pending' => $details->status->value === 'rejected' ? 'Pesanan Ditolak' : 'Menunggu Persetujuan Admin',
+                        'payment' => 'Pembayaran',
+                        'in_progress' => 'Pesanan Diproses',
+                        'completed' => 'Pesanan Selesai'
+                    ];
+                    $currentStatusIndex = $details->status->value === 'accepted' ? 1 : ($details->status->value === 'rejected' ? 0 : array_search($details->status->value, $statuses));
+                @endphp
+
+                @foreach ($statuses as $index => $status)
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="rounded-circle
+                            @if ($status === 'pending' && $details->status->value === 'rejected') bg-danger text-white
+                            @elseif ($currentStatusIndex >= $index) bg-primary text-white
+                            @else bg-secondary text-dark
+                            @endif"
+                            style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;">
+                            {{ $index + 1 }}
+                        </div>
+                        <p class="text-center" style="font-size: 0.8rem;">
+                            {{ $statusLabels[$status] }}
+                        </p>
+                    </div>
+
+                @endforeach
             </div>
+        </div>
+
+        {{-- Menampilkan informasi pembayaran setelah pesanan diterima --}}
+        @if ($details->status->value === 'accepted')
+            <section class="d-flex flex-column gap-4">
+                <h2 class="h5 fw-semibold"><i class="bi bi-wallet"></i> Payment Details</h2>
+                <div class="card p-3">
+                    <p class="fw-semibold">Total yang Harus Dibayar: <span class="fw-bold">Rp {{ number_format($details->admin_price, 0, ',', '.') }}</span></p>
+                    <p class="fw-semibold">Pesanan Selesai Pada Tanggal: {{ $details->admin_estimated_completion_date->format('d m Y') }}</p>
+                    <p class="mb-0">Tolong Transfer di Nomer Rekening dibawah ini:</p>
+                    <div class="d-flex flex-column gap-2 mt-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-bank fs-5"></i>
+                            <p class="fw-semibold mb-0">Bank BCA: 5545011970 a/n Niken Alfinanda Putri</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-bank fs-5"></i>
+                            <p class="fw-semibold mb-0">Bank BRI: 626801015467534 a/n Niken Alfinanda Putri</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Form Upload Bukti Pembayaran --}}
+                <form id="payment-upload-form" action="{{ route('front.custom.uploadPaymentProof', $details->id) }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-4 mt-3">
+                    @csrf
+                    <div class="d-flex flex-column gap-2">
+                        <label for="payment_method" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cash-coin"></i> Payment Method</label>
+                        <select name="payment_method" id="payment_method" class="form-select" required>
+                            <option value="">Pilih Bank</option>
+                            <option value="BCA">BCA</option>
+                            <option value="BRI">BRI</option>
+                        </select>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <label for="payment_proof" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-upload"></i> Upload Proof</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-upload"></i>
+                            </span>
+                            <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept=".jpg,.png" required>
+                        </div>
+                        <small class="form-text text-muted">Accepted formats: JPG, PNG</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirm_payment" name="confirm_payment" required>
+                        <label class="form-check-label fw-semibold" for="confirm_payment">
+                            Saya benar telah transfer pembayaran
+                        </label>
+                    </div>
+                    <button type="submit" form="payment-upload-form" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-check-circle"></i> Confirm Payment
+                    </button>
+                </form>
+            </section>
+        @endif
+
 
             <section class="d-flex flex-column gap-4">
                 <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-person-circle"></i> Customer Information</h2> {{-- Added icon --}}
@@ -112,9 +160,22 @@
                 <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-file-earmark-text"></i> Order Details</h2> {{-- Added icon --}}
                  @if($details->image_reference)
                     <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-image"></i> Image Reference:</p> {{-- Added icon --}}
-                         <img src="{{ Storage::url($details->image_reference) }}" alt="Kebaya Reference Image" class="img-fluid rounded-md">
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-image"></i> Image Reference 1:
+                        </p>
+                        <img src="{{ Storage::url($details->image_reference) }}" alt="Kebaya Reference Image 1" class="img-fluid rounded-md">
+
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
+                            <i class="bi bi-image"></i> Image Reference 2:
+                        </p>
+                        <img src="{{ Storage::url($details->image_reference_2) }}" alt="Kebaya Reference Image 2" class="img-fluid rounded-md">
+
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
+                            <i class="bi bi-image"></i> Image Reference 3:
+                        </p>
+                        <img src="{{ Storage::url($details->image_reference_3) }}" alt="Kebaya Reference Image 3" class="img-fluid rounded-md">
                     </div>
+
                 @endif
                 <div class="d-flex flex-column gap-2">
                     <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-file-text"></i> Kebaya Preference:</p> {{-- Added icon --}}
