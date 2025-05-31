@@ -147,26 +147,37 @@
 
             <section class="d-flex flex-column gap-4">
                 <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-file-earmark-text"></i> Order Details</h2> {{-- Added icon --}}
-                 @if($details->image_reference)
-                    <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2">
-                            <i class="bi bi-image"></i> Image Reference 1:
-                        </p>
+                <div class="d-flex flex-column gap-2">
+                    {{-- Image Reference 1 --}}
+                    <p class="fw-semibold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-image"></i> Image Reference 1:
+                    </p>
+                    @if($details->image_reference)
                         <img src="{{ Storage::url($details->image_reference) }}" alt="Kebaya Reference Image 1" class="img-fluid rounded-md">
+                    @else
+                        <p class="mb-0">-</p>
+                    @endif
 
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
-                            <i class="bi bi-image"></i> Image Reference 2:
-                        </p>
+                    {{-- Image Reference 2 --}}
+                    <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
+                        <i class="bi bi-image"></i> Image Reference 2:
+                    </p>
+                    @if($details->image_reference_2)
                         <img src="{{ Storage::url($details->image_reference_2) }}" alt="Kebaya Reference Image 2" class="img-fluid rounded-md">
-                        @if($details->image_reference_3)
-                            <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
-                                <i class="bi bi-image"></i> Image Reference 3:
-                            </p>
-                            <img src="{{ Storage::url($details->image_reference_3) }}" alt="Kebaya Reference Image 3" class="img-fluid rounded-md">
-                        @endif
-                    </div>
+                    @else
+                        <p class="mb-0">-</p>
+                    @endif
 
-                @endif
+                    {{-- Image Reference 3 --}}
+                    <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
+                        <i class="bi bi-image"></i> Image Reference 3:
+                    </p>
+                    @if($details->image_reference_3)
+                        <img src="{{ Storage::url($details->image_reference_3) }}" alt="Kebaya Reference Image 3" class="img-fluid rounded-md">
+                    @else
+                        <p class="mb-0">-</p>
+                    @endif
+                </div>
                 <div class="d-flex flex-column gap-2">
                     <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-file-text"></i> Kebaya Preference:</p> {{-- Added icon --}}
                     <p class="mb-0">{{ $details->kebaya_preference }}</p>
@@ -181,7 +192,7 @@
                 </div>
                 </section>
 
-            @if($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED || $details->status === \App\Enums\CustomTransactionStatus::IN_PROGRESS || $details->status === \App\Enums\CustomTransactionStatus::COMPLETED || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION)
+            @if($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED || $details->status === \App\Enums\CustomTransactionStatus::IN_PROGRESS || $details->status === \App\Enums\CustomTransactionStatus::COMPLETED || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT)
                 <section class="d-flex flex-column gap-4">
                     <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-chat-dots"></i> Admin Response</h2> {{-- Added icon --}}
                     @if($details->admin_price)

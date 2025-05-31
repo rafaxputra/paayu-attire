@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str; // Import Str for generating unique IDs
 use App\Enums\CustomTransactionStatus; // Import the enum
 use App\Enums\RentalTransactionStatus; // Import the enum
+use Illuminate\Support\Facades\Storage; // Import Storage facade
+use Spatie\ImageOptimizer\OptimizerChainFactory; // Import OptimizerChainFactory
 
 class FrontController extends Controller
 {
@@ -249,16 +251,24 @@ class FrontController extends Controller
         unset($validatedData['full_name']);
 
         // Upload gambar 1 wajib
-        $image1 = $request->file('image_reference_1')->store('custom_kebaya_references', 'public')->optimize('webp');
-        $validatedData['image_reference'] = $image1; // <-- cocokkan dengan nama kolom di DB
+        $image1Path = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
+        $fullPath1 = Storage::disk('public')->path($image1Path);
+        OptimizerChainFactory::create()->optimize($fullPath1);
+        $validatedData['image_reference'] = $image1Path;
 
         // Upload gambar 2 & 3 jika ada
         if ($request->hasFile('image_reference_2')) {
-            $validatedData['image_reference_2'] = $request->file('image_reference_2')->store('custom_kebaya_references', 'public')->optimize('webp');
+            $image2Path = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
+            $fullPath2 = Storage::disk('public')->path($image2Path);
+            OptimizerChainFactory::create()->optimize($fullPath2);
+            $validatedData['image_reference_2'] = $image2Path;
         }
 
         if ($request->hasFile('image_reference_3')) {
-            $validatedData['image_reference_3'] = $request->file('custom_kebaya_references')->store('custom_kebaya_references', 'public')->optimize('webp');
+            $image3Path = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
+            $fullPath3 = Storage::disk('public')->path($image3Path);
+            OptimizerChainFactory::create()->optimize($fullPath3);
+            $validatedData['image_reference_3'] = $image3Path;
         }
 
         $validatedData['user_id'] = Auth::id(); // Associate with authenticated user
@@ -315,8 +325,10 @@ class FrontController extends Controller
 
         // Store the payment proof
         $proofPath = $request->file('payment_proof')
-            ->store('custom_payment_proofs', 'public')->optimize('webp');
-            // ->optimize('webp'); // Optimize to webp - requires spatie/laravel-image-optimizer or similar
+            ->store('custom_payment_proofs', 'public');
+
+        $fullProofPath = Storage::disk('public')->path($proofPath);
+        OptimizerChainFactory::create()->optimize($fullProofPath);
 
         // Update the custom transaction
         $customTransaction->update([
@@ -425,7 +437,9 @@ class FrontController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('comment_images', 'public')->optimize('webp');
+            $imagePath = $request->file('image')->store('comment_images', 'public');
+            $fullImagePath = Storage::disk('public')->path($imagePath);
+            OptimizerChainFactory::create()->optimize($fullImagePath);
         }
 
         Comment::create([
