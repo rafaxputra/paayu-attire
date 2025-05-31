@@ -1,3 +1,4 @@
+<?php use Illuminate\Support\Number; ?>
 @extends('front.layouts.app')
 @section('title', 'Customer Dashboard')
 
@@ -30,6 +31,13 @@
                 <a href="{{ route('front.customer.editProfile') }}" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
                     <i class="bi bi-pencil-square"></i> Edit Profile
                 </a>
+
+                @if (Auth::user()->google_id === null)
+                    <a href="{{ route('front.auth.google') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-google"></i> Link to Google Account
+                    </a>
+                @endif
+
                 <button type="button" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
                     <i class="bi bi-trash"></i> Delete Account
                 </button>

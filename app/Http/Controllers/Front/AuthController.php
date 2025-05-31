@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User; // Import the User model
+use Illuminate\Support\Facades\Log; // Import Log
 
 class AuthController extends Controller
 {
@@ -127,53 +128,92 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            $user = Socialite::driver('google')->user();
+            $googleUser = Socialite::driver('google')->user();
 
-            $findUser = User::where('google_id', $user->id)->first();
+            // Check if a user is already logged in
+            if (Auth::check()) {
+                $user = Auth::user();
+
+                // Check if this Google account is already linked to another user
+                $existingGoogleUser = User::where('google_id', $googleUser->id)
+                                         ->where('id', '!=', $user->id)
+                                         ->first();
+
+                if ($existingGoogleUser) {
+                    // Google account already linked to another user
+                    Log::warning('Attempted to link Google account already linked to another user. Google ID: ' . $googleUser->id . ', Current User ID: ' . $user->id . ', Existing Linked User ID: ' . $existingGoogleUser->id);
+                    return redirect()->route('front.customer.dashboard')->withErrors(['google_linking' => 'This Google account is already linked to another user.']);
+                }
+
+                // Check if the Google account's email exists for a different user
+                $existingUserWithGoogleEmail = User::where('email', $googleUser->email)
+                                                  ->where('id', '!=', $user->id)
+                                                  ->first();
+
+                if ($existingUserWithGoogleEmail) {
+                    // An account with this email already exists
+                     Log::warning('Attempted to link Google account with email already existing for another user. Google Email: ' . $googleUser->email . ', Current User ID: ' . $user->id . ', Existing User ID: ' . $existingUserWithGoogleEmail->id);
+                    return redirect()->route('front.customer.dashboard')->withErrors(['google_linking' => 'An account with this Google email address already exists.']);
+                }
+
+
+                // Link the Google account to the currently authenticated user
+                $user->google_id = $googleUser->id;
+                $user->google_token = $googleUser->token;
+                // Do NOT update the user's email, name, or phone number here
+                $user->save();
+
+                Log::info('Google account linked successfully for user ID: ' . $user->id . ' with email: ' . $user->email . ' and Google ID: ' . $user->google_id);
+
+                return redirect()->route('front.customer.dashboard')->with('success', 'Google account linked successfully.');
+            }
+
+            // If not logged in, proceed with existing login/registration logic
+            $findUser = User::where('google_id', $googleUser->id)->first();
 
             if ($findUser) {
                 Auth::login($findUser);
                 // Check if phone number is missing, redirect to edit profile
                 if (empty($findUser->phone_number)) {
-                    return redirect()->route('front.customer.edit-profile');
+                    return redirect()->route('front.customer.editProfile');
                 }
                 return redirect()->intended(route('front.index')); // Redirect to intended page or home
             } else {
                 // Check if a user with the same email already exists
-                $existingUser = User::where('email', $user->email)->first();
+                $existingUser = User::where('email', $googleUser->email)->first();
 
                 if ($existingUser) {
                     // If user exists with the same email, link the Google account
-                    $existingUser->google_id = $user->id;
-                    $existingUser->google_token = $user->token;
+                    $existingUser->google_id = $googleUser->id;
+                    $existingUser->google_token = $googleUser->token;
                     $existingUser->save();
 
                     Auth::login($existingUser);
                      // Check if phone number is missing, redirect to edit profile
                     if (empty($existingUser->phone_number)) {
-                        return redirect()->route('front.customer.edit-profile');
+                        return redirect()->route('front.customer.editProfile');
                     }
                     return redirect()->intended(route('front.index'));
                 } else {
                     // Create a new user
                     $newUser = User::create([
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'google_id' => $user->id,
-                        'google_token' => $user->token,
+                        'name' => $googleUser->name,
+                        'email' => $googleUser->email,
+                        'google_id' => $googleUser->id,
+                        'google_token' => $googleUser->token,
                         'password' => Hash::make(Str::random(16)), // Generate a random password
                         'phone_number' => null, // Set phone_number to null initially for Google users
                     ]);
 
                     Auth::login($newUser);
                     // Redirect new Google users to edit profile to add phone number
-                    return redirect()->route('front.customer.edit-profile');
+                    return redirect()->route('front.customer.editProfile');
                 }
             }
         } catch (\Exception $e) {
             // Log the error or handle it appropriately
-            \Log::error('Google login failed: ' . $e->getMessage());
-            return redirect(route('front.index'))->withErrors(['google_login' => 'Unable to login with Google. Please try again.']);
+            Log::error('Google login/linking failed: ' . $e->getMessage());
+            return redirect(route('front.index'))->withErrors(['google_login' => 'Unable to process Google login or linking. Please try again.']);
         }
     }
 }
