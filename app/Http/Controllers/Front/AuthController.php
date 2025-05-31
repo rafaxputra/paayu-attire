@@ -133,6 +133,10 @@ class AuthController extends Controller
 
             if ($findUser) {
                 Auth::login($findUser);
+                // Check if phone number is missing, redirect to edit profile
+                if (empty($findUser->phone_number)) {
+                    return redirect()->route('front.customer.edit-profile');
+                }
                 return redirect()->intended(route('front.index')); // Redirect to intended page or home
             } else {
                 // Check if a user with the same email already exists
@@ -145,6 +149,10 @@ class AuthController extends Controller
                     $existingUser->save();
 
                     Auth::login($existingUser);
+                     // Check if phone number is missing, redirect to edit profile
+                    if (empty($existingUser->phone_number)) {
+                        return redirect()->route('front.customer.edit-profile');
+                    }
                     return redirect()->intended(route('front.index'));
                 } else {
                     // Create a new user
@@ -154,10 +162,12 @@ class AuthController extends Controller
                         'google_id' => $user->id,
                         'google_token' => $user->token,
                         'password' => Hash::make(Str::random(16)), // Generate a random password
+                        'phone_number' => null, // Set phone_number to null initially for Google users
                     ]);
 
                     Auth::login($newUser);
-                    return redirect()->intended(route('front.index'));
+                    // Redirect new Google users to edit profile to add phone number
+                    return redirect()->route('front.customer.edit-profile');
                 }
             }
         } catch (\Exception $e) {
