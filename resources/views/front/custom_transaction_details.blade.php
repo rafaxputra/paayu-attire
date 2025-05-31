@@ -158,11 +158,12 @@
                             <i class="bi bi-image"></i> Image Reference 2:
                         </p>
                         <img src="{{ Storage::url($details->image_reference_2) }}" alt="Kebaya Reference Image 2" class="img-fluid rounded-md">
-
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
-                            <i class="bi bi-image"></i> Image Reference 3:
-                        </p>
-                        <img src="{{ Storage::url($details->image_reference_3) }}" alt="Kebaya Reference Image 3" class="img-fluid rounded-md">
+                        @if($details->image_reference_3)
+                            <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
+                                <i class="bi bi-image"></i> Image Reference 3:
+                            </p>
+                            <img src="{{ Storage::url($details->image_reference_3) }}" alt="Kebaya Reference Image 3" class="img-fluid rounded-md">
+                        @endif
                     </div>
 
                 @endif
@@ -198,25 +199,20 @@
                 </section>
             @endif
 
-            {{-- Show Pickup Info if status is completed --}}
+            {{-- Show Pickup Information if status is completed --}}
             @if($details->status === \App\Enums\CustomTransactionStatus::COMPLETED)
                 <section class="d-flex flex-column gap-4">
-                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2> {{-- Changed icon and label --}}
-                    <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-building"></i> Pickup Location:</p> {{-- Added icon --}}
-                        <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                            <i class="bi bi-building fs-5"></i>
-                            <div class="d-flex flex-column gap-1">
-                                <p class="fw-semibold mb-0">Main Business Address</p>
-                                <p class="text-muted mb-0" style="font-size: 0.9rem;">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
-                            </div>
+                    <h2 class="h6 mb-2 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2>
+                    <div class="card p-4 d-flex flex-column gap-3">
+                        <div class="d-flex flex-column gap-1">
+                            <p class="fw-semibold mb-1 d-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i> Address:</p>
+                            <p class="mb-0 text-muted">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
                         </div>
                     </div>
                 </section>
             @endif
 
 
-            {{-- Show Approve/Cancel buttons if status is accepted and not paid --}}
             @if($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED && !$details->is_paid)
                 <section class="d-flex flex-column gap-4">
                     <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-question-circle"></i> Action Required</h2> {{-- Added icon --}}
@@ -297,7 +293,7 @@
                             <p class="fw-semibold mb-0" style="font-size: 0.9rem;">Payment Success</p>
                             <i class="bi bi-patch-check-fill"></i>
                         </div>
-                        <p class="mb-0" style="font-size: 0.8rem;">Pembayaran Anda sudah kami terima dan silahkan menunggu instruksi selanjutnya</p>
+                        <p class="mb-0" style="font-size: 0.8rem;">Pembayaran Anda sudah kami terima. Anda dapat mengambil pesanan custom Anda pada tanggal {{ $details->admin_estimated_completion_date->format('d m Y') }} di alamat yang tertera <a href="{{ route('front.contact') }}" class="text-white text-decoration-underline">di sini</a>.</p>
                     </div>
                 </div>
             @endif

@@ -29,6 +29,9 @@
                             Hi, {{ Auth::user()->name }}! 👋
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            @if(Auth::user()->role === 'admin')
+                                <li><a class="dropdown-item" href="{{ route('filament.admin.pages.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Admin Dashboard</a></li>
+                            @endif
                             <li><a class="dropdown-item" href="{{ route('front.customer.dashboard') }}"><i class="bi bi-person-circle me-2"></i> Kelola Profil</a></li> {{-- Need to create this route --}}
                             <li>
                                 <form action="{{ route('logout') }}" method="POST">

@@ -63,6 +63,11 @@ body {
     box-shadow: 0 0 0 3px var(--bs-primary);
 }
 
+/* Ensure text on success background is white in both modes */
+.card.bg-success {
+    color: #fff !important;
+}
+
 /* Dark Mode Styles */
 html[data-bs-theme="dark"] {
     /* Adjust general text color in main content for dark mode */
@@ -136,9 +141,10 @@ html[data-bs-theme="dark"] {
         color: #212529 !important; /* Keep dark text on warning background */
     }
 
-    .card.bg-success.text-white {
-        color: #495057 !important; /* Keep white text on success background */
-    }
+    /* Removed conflicting rule */
+    /* .card.bg-success.text-white {
+        color: #495057 !important;
+    } */
 
     /* Adjust colors for progress indicators in dark mode */
     .card .rounded-circle.bg-primary {

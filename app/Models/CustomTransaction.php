@@ -27,7 +27,6 @@ class CustomTransaction extends Model
         'is_paid',
         'payment_proof',
         'payment_method',
-        // Removed 'delivery_type' and 'address'
     ];
 
 
