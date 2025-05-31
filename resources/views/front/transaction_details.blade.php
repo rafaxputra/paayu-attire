@@ -9,8 +9,8 @@
             </a>
             <p class="h5 mb-0 fw-semibold">Booking Details</p>
             {{-- Dark/Light Mode Toggle Button --}}
-            <button id="theme-toggle" class="btn p-0"> {{-- Added ID --}}
-                <i class="bi bi-moon fs-4"></i> {{-- Initial icon (moon for light mode) --}}
+            <button id="theme-toggle" class="btn p-0">
+                <i class="bi bi-moon fs-4"></i>
             </button>
         </div>
         <section class="d-flex flex-column gap-4 px-3">
@@ -41,14 +41,14 @@
             @if ($details->status)
                 <div class="card p-3">
                     <p class="fw-semibold mb-2">Progress Pemesanan</p>
-                    <div class="d-flex align-items-center justify-content-between position-relative" style="width: 100%; padding: 10px 0;">
+                    <div class="d-flex align-items-start position-relative" style="width: 100%; padding: 10px 0;">
                         @php
                             // Using the RentalTransactionStatus enum for clarity
                             $statuses = [\App\Enums\RentalTransactionStatus::PENDING, \App\Enums\RentalTransactionStatus::PAID, \App\Enums\RentalTransactionStatus::IN_RENTAL, \App\Enums\RentalTransactionStatus::COMPLETED];
                             $statusLabels = [
-                                \App\Enums\RentalTransactionStatus::PENDING->value => 'Menunggu Pembayaran',
-                                \App\Enums\RentalTransactionStatus::PAID->value => 'Pembayaran Terverifikasi',
-                                \App\Enums\RentalTransactionStatus::IN_RENTAL->value => 'Dalam Penyewaan',
+                                \App\Enums\RentalTransactionStatus::PENDING->value => 'Menunggu<br>Pembayaran',
+                                \App\Enums\RentalTransactionStatus::PAID->value => 'Pembayaran<br>Terverifikasi',
+                                \App\Enums\RentalTransactionStatus::IN_RENTAL->value => 'Dalam<br>Penyewaan',
                                 \App\Enums\RentalTransactionStatus::COMPLETED->value => 'Selesai'
                             ];
                             // Map current status to the simplified progress steps
@@ -64,7 +64,7 @@
 
                         @foreach ($statuses as $index => $status)
                             <div class="d-flex flex-column align-items-center">
-                                <div class="rounded-circle
+                                <div class="rounded-circle mb-1
                                     @if ($details->status === \App\Enums\RentalTransactionStatus::REJECTED && $index === 0) bg-danger text-white
                                     @elseif ($details->status === \App\Enums\RentalTransactionStatus::CANCELLED && $index === 0) bg-danger text-white
                                     @elseif ($currentStatusIndex >= $index) bg-primary text-white
@@ -73,19 +73,19 @@
                                     style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;">
                                     {{ $index + 1 }}
                                 </div>
-                                <p class="text-center" style="font-size: 0.8rem; margin-top: 5px;">
+                                <p class="text-center" style="font-size: 0.85rem; margin-top: 5px;">
                                      @if ($details->status === \App\Enums\RentalTransactionStatus::REJECTED && $index === 0)
                                         Ditolak
                                     @elseif ($details->status === \App\Enums\RentalTransactionStatus::CANCELLED && $index === 0)
                                         Dibatalkan
                                     @else
-                                        {{ $statusLabels[$status->value] ?? $status->getLabel() }}
+                                        {!! $statusLabels[$status->value] ?? $status->getLabel() !!}
                                     @endif
                                 </p>
                             </div>
 
                             @if ($index < count($statuses) - 1)
-                                <div class="flex-grow-1 bg-secondary" style="height: 5px;"></div>
+                                <div class="flex-grow-1 bg-secondary mt-3" style="height: 5px;"></div> {{-- Added mt-3 --}}
                             @endif
                         @endforeach
                     </div>
@@ -129,31 +129,31 @@
                 </div>
             </div>
             <section class="d-flex flex-column gap-4">
-                <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-person-circle"></i> Customer Information</h2> {{-- Added icon --}}
+                <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-person-circle"></i> Customer Information</h2>
                 <div class="card p-4 d-flex flex-column gap-3">
                     <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</p> {{-- Added icon --}}
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</p>
                         <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
                             <i class="bi bi-person fs-5"></i>
                             <p class="fw-semibold mb-0">{{ $details->name }}</p>
                         </div>
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</p> {{-- Added icon --}}
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</p>
                         <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
                             <i class="bi bi-telephone fs-5"></i>
                             <p class="fw-semibold mb-0">{{ $details->phone_number }}</p>
                         </div>
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Started At</p> {{-- Added icon --}}
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Started At</p>
                         <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
                             <i class="bi bi-calendar-event fs-5"></i>
                             <p class="fw-semibold mb-0">{{ $details->started_at->format('d m Y') }}</p>
                         </div>
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Ended At</p> {{-- Added icon --}}
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Ended At</p>
                         <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
                             <i class="bi bi-calendar-event fs-5"></i>
                             <p class="fw-semibold mb-0">{{ $details->ended_at->format('d m Y') }}</p>
@@ -163,7 +163,7 @@
             </section>
             <hr class="my-3">
             <div id="Payment-details" class="d-flex flex-column gap-3">
-                <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-credit-card"></i> Payment Details</h2> {{-- Added icon --}}
+                <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-credit-card"></i> Payment Details</h2>
                 <div class="d-flex flex-column gap-4">
                     <div class="d-flex justify-content-between align-items-center">
                     <p class="mb-0">Grand total</p>
@@ -175,9 +175,9 @@
             {{-- Show Pickup Info if status is completed --}}
             @if($details->status === \App\Enums\RentalTransactionStatus::COMPLETED)
                 <section class="d-flex flex-column gap-4">
-                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2> {{-- Changed icon and label --}}
+                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2>
                     <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-building"></i> Pickup Location:</p> {{-- Added icon --}}
+                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-building"></i> Pickup Location:</p>
                         <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
                             <i class="bi bi-building fs-5"></i>
                             <div class="d-flex flex-column gap-1">
@@ -193,7 +193,7 @@
         <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
             <div class="container main-content-container">
                 <div class="d-flex align-items-center justify-content-between p-3">
-                    <a href="https://wa.me/6285183004324" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Contact Customer Service</a> {{-- Added icon and flex/gap --}}
+                    <a href="https://wa.me/6285183004324" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Contact Customer Service</a>
                 </div>
             </div>
         </div>
