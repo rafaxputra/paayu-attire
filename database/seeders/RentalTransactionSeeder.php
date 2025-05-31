@@ -22,10 +22,10 @@ class RentalTransactionSeeder extends Seeder
                 'phone_number' => '085',
                 'started_at' => '2025-05-13',
                 'ended_at' => '2025-05-14',
-                'delivery_type' => 'pickup',
-                'address' => NULL,
+                
+                
                 'total_amount' => 57000.00,
-                'is_paid' => 1,
+                
                 'payment_proof' => 'payment_proofs/VqlQMIEC9rjQrMAtSKOwm62Q9byhazPjnOJ3JCLz.png',
                 'payment_method' => 'BCA',
                 'status' => 'paid',
@@ -41,10 +41,10 @@ class RentalTransactionSeeder extends Seeder
                 'phone_number' => '12345',
                 'started_at' => '2025-05-13',
                 'ended_at' => '2025-05-15',
-                'delivery_type' => 'pickup',
-                'address' => NULL,
+                
+                
                 'total_amount' => 300000.00,
-                'is_paid' => 1,
+                
                 'payment_proof' => 'payment_proofs/8BLSyYWqJlylTttBLQgW8WjK4Qc1K1bAHEYJ7vxX.png',
                 'payment_method' => 'BRI',
                 'status' => 'paid',
