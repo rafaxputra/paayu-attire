@@ -22,7 +22,7 @@ class FrontController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth')->only(['booking_save', 'storeCustomOrder', 'uploadCustomPaymentProof', 'cancelCustomOrder', 'approveCustomOrder', 'getComments', 'storeComment']);
+        $this->middleware('auth')->only(['booking_save', 'storeCustomOrder', 'uploadCustomPaymentProof', 'cancelCustomOrder', 'approveCustomOrder', 'storeComment']);
     }
 
     public function index(Request $request) // Inject Request

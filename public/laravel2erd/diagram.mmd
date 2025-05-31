@@ -1,0 +1,110 @@
+erDiagram
+    %% Laravel ERD Diagram
+
+    User {
+        bigint id PK
+        string name
+        string email
+        string password
+        string google_id
+        string google_token
+        string phone_number
+        string role
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RentalTransaction {
+        bigint id PK
+        string trx_id
+        string user_id
+        string product_id
+        string name
+        string phone_number
+        date started_at
+        date ended_at
+        string delivery_type
+        string address
+        string total_amount
+        boolean is_paid
+        string payment_proof
+        string payment_method
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ProductSize {
+        bigint id PK
+        string product_id
+        string size
+        string stock
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ProductPhoto {
+        bigint id PK
+        string photo
+        string product_id
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    Product {
+        bigint id PK
+        string name
+        string slug
+        string thumbnail
+        string about
+        string material
+        string color
+        string size_chart
+        string price
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CustomTransaction {
+        bigint id PK
+        string trx_id
+        string user_id
+        string name
+        string phone_number
+        string image_reference
+        string image_reference_2
+        string image_reference_3
+        string kebaya_preference
+        string amount_to_buy
+        date date_needed
+        string admin_price
+        date admin_estimated_completion_date
+        string status
+        boolean is_paid
+        string payment_proof
+        string payment_method
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    Comment {
+        bigint id PK
+        string user_id
+        string name
+        string comment
+        string image
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    User ||--o{ RentalTransaction : "has many"
+    User ||--o{ CustomTransaction : "has many"
+    User ||--o{ Comment : "has many"
+    RentalTransaction ||--|| Product : "belongs to"
+    RentalTransaction ||--|| User : "belongs to"
+    ProductSize ||--|| Product : "belongs to"
+    ProductPhoto ||--|| Product : "belongs to"
+    Product ||--o{ ProductPhoto : "has many"
+    Product ||--o{ ProductSize : "has many"
+    CustomTransaction ||--|| User : "belongs to"
+    Comment ||--|| User : "belongs to"

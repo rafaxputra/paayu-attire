@@ -74,4 +74,11 @@ class User extends Authenticatable implements FilamentUser // Implement Filament
     {
         return $this->hasMany(CustomTransaction::class);
     }
+/**
+     * Get the comments for the user.
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
 }

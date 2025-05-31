@@ -51,12 +51,12 @@ class Product extends Model
         'price' => MoneyCast::class,
     ];
 
-    public function photos(): HasMany
+    public function photos()
     {
         return $this->hasMany(ProductPhoto::class);
     }
 
-    public function productSizes(): HasMany
+    public function productSizes()
     {
         return $this->hasMany(ProductSize::class);
     }

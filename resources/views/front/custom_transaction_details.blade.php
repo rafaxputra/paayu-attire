@@ -76,14 +76,14 @@
                 <h2 class="h5 fw-semibold"><i class="bi bi-wallet"></i> Payment Details</h2>
                 <div class="card p-3">
                     <p class="fw-semibold">Total yang Harus Dibayar: <span class="fw-bold">Rp {{ number_format($details->admin_price, 0, ',', '.') }}</span></p>
-                    <p class="fw-semibold">Pesanan Selesai Pada Tanggal: {{ $details->admin_estimated_completion_date->format('d m Y') }}</p>
+                    <p class="fw-semibold">Pesanan Selesai Pada Tanggal: {{ $details->admin_estimated_completion_date ? $details->admin_estimated_completion_date->format('d m Y') : '-' }}</p>
                     <p class="mb-0">Tolong Transfer di Nomer Rekening dibawah ini:</p>
                     <div class="d-flex flex-column gap-2 mt-3">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-bank fs-5"></i>
                             <p class="fw-semibold mb-0">Bank BCA: 5545011970 a/n Niken Alfinanda Putri</p>
                         </div>
-                        <div class="d-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-bank fs-5"></i>
                             <p class="fw-semibold mb-0">Bank BRI: 626801015467534 a/n Niken Alfinanda Putri</p>
                         </div>
