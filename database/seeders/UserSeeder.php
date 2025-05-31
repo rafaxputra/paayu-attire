@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
     {
         // Create an admin user
         User::create([
-            'name' => 'Admin User',
+            'name' => 'Rafa',
             'email' => 'inituhrafa@Gmail.com',
             'password' => Hash::make('yarafa'),
             'role' => 'admin',
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
 
         // Create a customer user
         User::create([
-            'name' => 'Customer User',
+            'name' => 'Elcan',
             'email' => 'elsa@gmail.com',
             'password' => Hash::make('yaelsa'),
             'role' => 'customer',
