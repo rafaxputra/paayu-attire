@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str; // Import Str for generating unique IDs
 use App\Enums\CustomTransactionStatus; // Import the enum
+use App\Enums\RentalTransactionStatus; // Import the enum
 
 class FrontController extends Controller
 {
@@ -100,7 +101,7 @@ class FrontController extends Controller
                 'ended_at' => $endedDate,
 
                 'total_amount' => $totalAmount,
-                'status' => CustomTransactionStatus::PENDING, // Initial status using enum
+                'status' => RentalTransactionStatus::PENDING, // Initial status using enum
             ]);
 
             // Decrement stock

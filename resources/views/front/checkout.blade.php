@@ -40,7 +40,7 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="flex-shrink-0 rounded-2 overflow-hidden" style="width: 80px; height: 80px; background-color: #F6F6F6;">
                         <div class="d-flex justify-content-center align-items-center h-100 w-100">
-                            <img src="{{ Storage::url($product->thumbnail) }}" class="img-fluid" alt="thumbnail" style="max-height: 50px; object-fit: contain;" />
+                            <img src="{{ Storage::url($product->thumbnail) }}" class="img-fluid" alt="thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                     </div>
                     <div class="flex-grow-1 d-flex flex-column gap-2">
