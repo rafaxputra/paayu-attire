@@ -26,7 +26,7 @@
             </div>
             <div class="w-100 d-flex flex-column gap-3 align-items-center" style="max-width: 220px;">
                 <a href="{{ route('front.index') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-cart-plus"></i> Rent More</a>
-                <a href="{{ route('front.transactions') }}"
+                <a href="{{ route('front.transactions.details', ['trx_id' => $transaction->trx_id, 'phone_number' => $transaction->phone_number]) }}"
                     class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-receipt"></i> Booking Details</a>
             </div>
         </section>

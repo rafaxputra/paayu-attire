@@ -9,7 +9,7 @@ Route::name('front.')->group(function () {
     Route::get('/', [FrontController::class, 'index'])->name('index');
 
     Route::get('/transactions', [FrontController::class, 'transactions'])->name('transactions');
-    Route::post('/transactions/details', [FrontController::class, 'transactions_details'])->name('transactions.details');
+    Route::get('/transactions/details', [FrontController::class, 'transactions_details'])->name('transactions.details');
 
     Route::get('/details/{product:slug}', [FrontController::class, 'details'])->name('details');
 

@@ -148,7 +148,7 @@ class FrontController extends Controller
         $rentalTransaction->update([
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
-            'status' => 'pending_payment_verification', // New status for admin verification - Consider using an enum if this status is common
+            'status' => RentalTransactionStatus::PENDING_PAYMENT, // New status for admin verification - Consider using an enum if this status is common
         ]);
 
         // Redirect to the success booking page with the transaction ID
@@ -229,9 +229,9 @@ class FrontController extends Controller
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:255'],
-            'image_reference_1' => ['required', 'image', 'mimes:jpg,png', 'max:2048'],
-            'image_reference_2' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
-            'image_reference_3' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
+            'image_reference_1' => ['required', 'image', 'mimes:jpg,png'],
+            'image_reference_2' => ['nullable', 'image', 'mimes:jpg,png'],
+            'image_reference_3' => ['nullable', 'image', 'mimes:jpg,png'],
             'kebaya_preference' => ['required', 'string'],
             'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'],
             'date_needed' => ['required', 'date', 'after_or_equal:today'],
@@ -249,16 +249,16 @@ class FrontController extends Controller
         unset($validatedData['full_name']);
 
         // Upload gambar 1 wajib
-        $image1 = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
+        $image1 = $request->file('image_reference_1')->store('custom_kebaya_references', 'public')->optimize('webp');
         $validatedData['image_reference'] = $image1; // <-- cocokkan dengan nama kolom di DB
 
         // Upload gambar 2 & 3 jika ada
         if ($request->hasFile('image_reference_2')) {
-            $validatedData['image_reference_2'] = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
+            $validatedData['image_reference_2'] = $request->file('image_reference_2')->store('custom_kebaya_references', 'public')->optimize('webp');
         }
 
         if ($request->hasFile('image_reference_3')) {
-            $validatedData['image_reference_3'] = $request->file('custom_kebaya_references')->store('custom_kebaya_references', 'public');
+            $validatedData['image_reference_3'] = $request->file('custom_kebaya_references')->store('custom_kebaya_references', 'public')->optimize('webp');
         }
 
         $validatedData['user_id'] = Auth::id(); // Associate with authenticated user
@@ -307,7 +307,7 @@ class FrontController extends Controller
     public function uploadCustomPaymentProof(Request $request, CustomTransaction $customTransaction) // Added CustomTransaction type hint
     {
         $request->validate([
-            'payment_proof' => ['required', 'image', 'mimes:jpg,png', 'max:2048'], // Validate image file
+            'payment_proof' => ['required', 'image', 'mimes:jpg,png'], // Validate image file
             'payment_method' => ['required', 'string', 'in:BCA,BRI'], // Validate payment method
             'confirm_payment' => ['accepted'], // Validate checkbox
         ]);
@@ -315,7 +315,7 @@ class FrontController extends Controller
 
         // Store the payment proof
         $proofPath = $request->file('payment_proof')
-            ->store('custom_payment_proofs', 'public');
+            ->store('custom_payment_proofs', 'public')->optimize('webp');
             // ->optimize('webp'); // Optimize to webp - requires spatie/laravel-image-optimizer or similar
 
         // Update the custom transaction
@@ -417,7 +417,7 @@ class FrontController extends Controller
     {
         $request->validate([
             'comment' => ['required', 'string'],
-            'image' => ['nullable', 'image', 'mimes:jpg,png', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpg,png'],
         ]);
 
         // Ambil nama user yang login
@@ -425,7 +425,7 @@ class FrontController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('comment_images', 'public');
+            $imagePath = $request->file('image')->store('comment_images', 'public')->optimize('webp');
         }
 
         Comment::create([

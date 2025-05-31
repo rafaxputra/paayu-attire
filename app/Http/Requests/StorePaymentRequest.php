@@ -23,7 +23,7 @@ class StorePaymentRequest extends FormRequest
     {
         return [
             'transaction_id' => ['required', 'exists:rental_transactions,trx_id'],
-            'payment_proof' => ['required', 'image', 'mimes:jpg,png', 'max:2048'],
+            'payment_proof' => ['required', 'image', 'mimes:jpg,png'],
             'payment_method' => ['required', 'string', 'in:BCA,BRI'],
             'confirm_payment' => ['accepted'],
         ];
