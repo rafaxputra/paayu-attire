@@ -8,10 +8,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser; // Add this import
 use Filament\Panel; // Add this import
+use Illuminate\Database\Eloquent\SoftDeletes; // Add this import
 
 class User extends Authenticatable implements FilamentUser // Implement FilamentUser
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes; // Add SoftDeletes trait
 
     // Add the canAccessPanel method
     public function canAccessPanel(Panel $panel): bool
