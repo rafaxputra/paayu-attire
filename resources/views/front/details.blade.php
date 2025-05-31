@@ -42,11 +42,73 @@
             </div>
             <div id="About" class="d-flex flex-column gap-2">
                 <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-book"></i> About</h2>
-                {{-- ✅ Perubahan ada di sini --}}
-                <p class="mb-0">{!! $product->about !!}</p>
+                <div class="card p-3"> {{-- Added card for better visual separation --}}
+                    <p class="mb-0">{!! $product->about !!}</p>
+                </div>
             </div>
         </section>
         <section id="Product-Info" class="d-flex flex-column mt-4 px-3 w-100 gap-4">
+            {{-- Added Material Section --}}
+            @if($product->material)
+                <div id="Material" class="d-flex flex-column gap-2">
+                    <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-gem"></i> Material</h2>
+                     <div class="card p-3"> {{-- Added card --}}
+                        <p class="mb-0">{!! nl2br(e($product->material)) !!}</p> {{-- Use nl2br and escape for safety --}}
+                    </div>
+                </div>
+            @endif
+
+            {{-- Added Color Section --}}
+            @if($product->color)
+                <div id="Color" class="d-flex flex-column gap-2">
+                    <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-palette"></i> Color</h2>
+                    <div class="card p-3"> {{-- Added card --}}
+                        <p class="mb-0">{{ $product->color }}</p>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Added Size Chart Section --}}
+            @if($product->size_chart)
+                <div id="Size-Chart" class="d-flex flex-column gap-2">
+                    <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-list-ol"></i> Size Chart</h2>
+                    <div class="card p-3"> {{-- Added card --}}
+                        {{-- Assuming size_chart is plain text with headers and data separated by '|' and lines by newline --}}
+                        @php
+                            $lines = explode("\n", trim($product->size_chart));
+                            $header = explode('|', trim(array_shift($lines)));
+                        @endphp
+                        <div class="table-responsive"> {{-- Added responsive container for table --}}
+                            <table class="table table-bordered text-center"> {{-- Added Bootstrap table classes and text-center --}}
+                                <thead>
+                                    <tr>
+                                        <th class="align-middle">Size</th> {{-- Added Size header and align-middle --}}
+                                        @foreach($header as $h)
+                                            <th scope="col" class="align-middle">{{ trim($h) }}</th> {{-- Added align-middle --}}
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($lines as $line)
+                                        @php
+                                            $parts = explode(':', trim($line), 2); // Split into size and measurements
+                                            $sizeLabel = trim($parts[0] ?? '');
+                                            $measurements = explode('|', trim($parts[1] ?? ''));
+                                        @endphp
+                                        <tr>
+                                            <td class="align-middle">{{ $sizeLabel }}</td> {{-- Display size label and align-middle --}}
+                                            @foreach($measurements as $cell)
+                                                <td class="align-middle">{{ trim($cell) }}</td> {{-- Added align-middle --}}
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div id="Sizes" class="d-flex flex-column gap-3">
                 <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-arrows-fullscreen"></i> Available Sizes</h2>
                 <div class="d-flex flex-wrap gap-3">
