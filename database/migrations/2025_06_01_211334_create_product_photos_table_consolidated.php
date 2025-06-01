@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('comments', function (Blueprint $table) {
-            $table->string('image')->nullable(); // Kolom untuk menyimpan path gambar
+        Schema::create('product_photos', function (Blueprint $table) {
+            $table->id();
+            $table->string('photo');
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->softDeletes();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('comments', function (Blueprint $table) {
-            $table->dropColumn('image');
-        });
+        Schema::dropIfExists('product_photos');
     }
 };

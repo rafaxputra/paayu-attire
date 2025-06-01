@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('thumbnail');
             $table->text('about');
             $table->unsignedBigInteger('price');
+            $table->text('material')->nullable();
+            $table->string('color')->nullable();
+            $table->text('size_chart')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

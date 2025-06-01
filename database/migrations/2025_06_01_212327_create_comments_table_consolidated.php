@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rental_transactions', function (Blueprint $table) {
-            $table->index('trx_id');
-            $table->index('phone_number');
+        Schema::create('comments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->constrained();
+            $table->string('name');
+            $table->text('comment');
+            $table->string('image')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -22,9 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rental_transactions', function (Blueprint $table) {
-            $table->dropIndex(['trx_id']);
-            $table->dropIndex(['phone_number']);
-        });
+        Schema::dropIfExists('comments');
     }
 };

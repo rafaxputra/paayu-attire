@@ -28,7 +28,7 @@ class RentalTransactionSeeder extends Seeder
                 
                 'payment_proof' => 'payment_proofs/VqlQMIEC9rjQrMAtSKOwm62Q9byhazPjnOJ3JCLz.png',
                 'payment_method' => 'BCA',
-                'status' => 'paid',
+                'status' => 'payment_validated',
                 'created_at' => '2025-05-11 17:15:07',
                 'updated_at' => '2025-05-11 20:19:35',
                 'user_id' => NULL, // Set user_id to NULL as original user might not exist or for simplicity
@@ -47,7 +47,7 @@ class RentalTransactionSeeder extends Seeder
                 
                 'payment_proof' => 'payment_proofs/8BLSyYWqJlylTttBLQgW8WjK4Qc1K1bAHEYJ7vxX.png',
                 'payment_method' => 'BRI',
-                'status' => 'paid',
+                'status' => 'payment_validated',
                 'created_at' => '2025-05-12 08:45:59',
                 'updated_at' => '2025-05-12 08:57:28',
                 'user_id' => NULL, // Set user_id to NULL

@@ -13,20 +13,29 @@ return new class extends Migration
     {
         Schema::create('rental_transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->string('trx_id')->unique();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('phone_number');
             $table->date('started_at');
             $table->date('ended_at');
-            $table->string('delivery_type'); // e.g., 'pickup', 'delivery'
-            $table->text('address')->nullable();
             $table->decimal('total_amount', 10, 2);
-            $table->boolean('is_paid')->default(false);
             $table->string('payment_proof')->nullable();
-            $table->string('payment_method')->nullable(); // e.g., 'BCA', 'BRI'
-            $table->string('status')->default('pending'); // e.g., 'pending', 'paid', 'cancelled'
+            $table->string('payment_method')->nullable();
+            $table->enum('status', [
+                'pending_payment_verification',
+                'payment_validated',
+                'payment_failed',
+                'ready_for_pickup',
+                'in_rental',
+                'completed',
+                'rejected',
+                'cancelled'
+            ])->default('pending_payment_verification');
             $table->timestamps();
+            $table->index('trx_id');
+            $table->index('phone_number');
         });
     }
 
