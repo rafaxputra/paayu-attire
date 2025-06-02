@@ -22,7 +22,7 @@ class FrontController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth')->only(['booking_save', 'storeCustomOrder', 'uploadCustomPaymentProof', 'cancelCustomOrder', 'approveCustomOrder', 'storeComment']);
+        $this->middleware('auth')->only(['booking_save', 'storeCustomOrder', 'uploadCustomPaymentProof', 'cancelCustomOrder', 'approveCustomOrder', 'storeComment', 'cancelRentalOrder']);
     }
 
     public function index(Request $request) // Inject Request
@@ -101,9 +101,8 @@ class FrontController extends Controller
                 'phone_number' => $request->phone_number,
                 'started_at' => $startedDate,
                 'ended_at' => $endedDate,
-
                 'total_amount' => $totalAmount,
-                'status' => RentalTransactionStatus::PENDING, // Initial status using enum
+                'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION, // Updated initial status using enum
             ]);
 
             // Decrement stock
@@ -121,8 +120,8 @@ class FrontController extends Controller
     {
         $transactionId = $request->query('transactionId');
         $rentalTransaction = RentalTransaction::where('trx_id', $transactionId)
-                                ->where('product_id', $product->id) // Ensure transaction matches product
-                                ->firstOrFail();
+                                     ->where('product_id', $product->id) // Ensure transaction matches product
+                                     ->firstOrFail();
 
         // Calculate subTotal and grandTotal based on the fetched transaction
         $subTotal = $rentalTransaction->product->price * $rentalTransaction->duration;
@@ -143,17 +142,25 @@ class FrontController extends Controller
 
         $rentalTransaction = RentalTransaction::where('trx_id', $request->transaction_id)->firstOrFail();
 
-        // Store the payment proof
+        // Delete old payment proof if it exists
+        if ($rentalTransaction->payment_proof) {
+            Storage::disk('public')->delete($rentalTransaction->payment_proof);
+        }
+
+        // Store the new payment proof
         $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+
+        // Optimize the image
+        $fullProofPath = Storage::disk('public')->path($proofPath);
+        OptimizerChainFactory::create()->optimize($fullProofPath);
 
         // Update the rental transaction
         $rentalTransaction->update([
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
-            'status' => RentalTransactionStatus::PENDING_PAYMENT, // New status for admin verification - Consider using an enum if this status is common
+            'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION, // Status for admin verification
         ]);
 
-        // Redirect to the success booking page with the transaction ID
         return redirect()->route('front.success.booking', $rentalTransaction->trx_id);
     }
 
@@ -366,6 +373,26 @@ class FrontController extends Controller
         return back()->withErrors(['error' => 'Custom order cannot be approved at this stage.']);
     }
 
+    // New method to handle rental order cancellation
+    public function cancelRentalOrder(RentalTransaction $rentalTransaction)
+    {
+        // Allow cancellation only if status is not completed, rejected, or already cancelled
+        if (
+            $rentalTransaction->status !== RentalTransactionStatus::COMPLETED &&
+            $rentalTransaction->status !== RentalTransactionStatus::REJECTED &&
+            $rentalTransaction->status !== RentalTransactionStatus::CANCELLED
+        ) {
+            // Delete associated payment proof if it exists
+            if ($rentalTransaction->payment_proof) {
+                Storage::disk('public')->delete($rentalTransaction->payment_proof);
+            }
+            $rentalTransaction->update(['status' => RentalTransactionStatus::CANCELLED]);
+            return back()->with('success', 'Rental order cancelled successfully.');
+        }
+
+        return back()->withErrors(['error' => 'Rental order cannot be cancelled at this stage.']);
+    }
+
 
     // Need to create methods for:
     // - Admin actions in Filament (will be in Filament resources)
@@ -451,8 +478,4 @@ class FrontController extends Controller
 
         return back()->with('success', 'Komentar berhasil dikirim!');
     }
-
-
-    // Need to create methods for:
-    // - Admin actions in Filament (will be in Filament resources)
 }
