@@ -399,6 +399,7 @@ public function handleGoogleCallback()
 
 public function getComments()
 {
+    $comments = Comment::all();
     return view('front.contact', compact('comments'));
 }
 
