@@ -22,9 +22,9 @@
                 </div>
             @endif
 
-            <form action="{{ route('front.transactions.details') }}" method="POST"
+            <form action="{{ route('front.transactions.details') }}" method="GET"
                 class="card p-4 d-flex flex-column gap-4 w-100">
-                @csrf
+                
                 <div class="d-flex flex-column gap-2">
                     <label for="phone" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label> {{-- Added icon --}}
                     <div class="input-group">
