@@ -2,473 +2,425 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CustomTransactionStatus;
+use App\Enums\RentalTransactionStatus;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\StorePaymentRequest;
 use App\Models\Comment;
 use App\Models\CustomTransaction;
 use App\Models\Product;
 use App\Models\RentalTransaction;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str; // Import Str for generating unique IDs
-use App\Enums\CustomTransactionStatus; // Import the enum
-use App\Enums\RentalTransactionStatus; // Import the enum
-use Illuminate\Support\Facades\Storage; // Import Storage facade
-use Spatie\ImageOptimizer\OptimizerChainFactory; // Import OptimizerChainFactory
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 class FrontController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth')->only(['booking_save', 'storeCustomOrder', 'uploadCustomPaymentProof', 'cancelCustomOrder', 'approveCustomOrder', 'storeComment', 'cancelRentalOrder']);
+public function __construct()
+{
+$this->middleware('auth')->only(['booking_save', 'storeCustomOrder', 'uploadCustomPaymentProof', 'cancelCustomOrder', 'approveCustomOrder', 'storeComment', 'cancelRentalOrder']);
+}
+
+public function index(Request $request)
+{
+    $availableSizes = \App\Models\ProductSize::distinct()->pluck('size')->sort()->values()->all();
+    $query = Product::with('productSizes');
+    if ($request->filled('search')) {
+        $query->where('name', 'like', '%' . $request->input('search') . '%');
     }
-
-    public function index(Request $request) // Inject Request
-    {
-        // Fetch all unique product sizes for the filter dropdown
-        $availableSizes = \App\Models\ProductSize::distinct()->pluck('size')->sort()->values()->all();
-
-        // Start with the base product query
-        $query = Product::with('productSizes');
-
-        // Apply search filter if present in the request
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->input('search') . '%');
-        }
-
-        // Apply size filter if present in the request
-        if ($request->filled('size')) {
-            $query->whereHas('productSizes', function ($query) use ($request) {
-                $query->where('size', $request->input('size'));
-            });
-        }
-
-        // Apply price sorting if present in the request
-        if ($request->filled('sort_price')) {
-            $sortDirection = $request->input('sort_price') === 'asc' ? 'asc' : 'desc';
-            $query->orderBy('price', $sortDirection);
-        } else {
-            // Default sorting (e.g., latest)
-            $query->latest();
-        }
-
-        // Fetch the filtered and sorted products
-        $products = $query->get();
-
-        // You might want to implement logic for "You Might Like" and "Popular Products" here later
-
-        return view('front.index', compact('products', 'availableSizes')); // Pass availableSizes to the view
-    }
-
-    public function details(Product $product)
-    {
-        // Load product with its sizes
-        $product->load('productSizes');
-        return view('front.details', compact('product'));
-    }
-
-    public function booking(Product $product)
-    {
-        // Stores are removed, handle pickup location differently if needed
-        return view('front.booking', compact('product'));
-    }
-
-    public function booking_save(StoreBookingRequest $request, Product $product) // Changed Request type hint to StoreBookingRequest
-    {
-        // Validation is now handled by StoreBookingRequest
-
-        $productSize = $product->productSizes()->findOrFail($request->product_size_id);
-
-        if ($productSize->stock <= 0) {
-            return back()->withErrors(['product_size_id' => 'Selected size is out of stock.'])->withInput();
-        }
-
-        $duration = (int) $request->duration;
-        $startedDate = Carbon::parse($request->started_at);
-        $endedDate = $startedDate->copy()->addDays($duration);
-        $totalAmount = $product->price * $duration; // Calculate total amount without PPN/Insurance
-
-        $rentalTransaction = null;
-
-        DB::transaction(function () use ($request, $product, $productSize, $duration, $startedDate, $endedDate, $totalAmount, &$rentalTransaction) {
-            $rentalTransaction = RentalTransaction::create([
-                'trx_id' => 'RENTAL-' . Str::random(8), // Generate unique transaction ID
-                'user_id' => Auth::id(), // Associate with authenticated user
-                'product_id' => $product->id,
-                'name' => $request->name,
-                'phone_number' => $request->phone_number,
-                'started_at' => $startedDate,
-                'ended_at' => $endedDate,
-                'total_amount' => $totalAmount,
-                'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION, // Updated initial status using enum
-            ]);
-
-            // Decrement stock
-            $productSize->decrement('stock');
+    if ($request->filled('size')) {
+        $query->whereHas('productSizes', function ($query) use ($request) {
+            $query->where('size', $request->input('size'));
         });
+    }
+    if ($request->filled('sort_price')) {
+        $sortDirection = $request->input('sort_price') === 'asc' ? 'asc' : 'desc';
+        $query->orderBy('price', $sortDirection);
+    } else {
+        $query->latest();
+    }
+    $products = $query->get();
+    return view('front.index', compact('products', 'availableSizes'));
+}
 
-        // Redirect to checkout with transaction ID
-        return redirect()->route('front.checkout', [
-            'product' => $product->slug,
-            'transactionId' => $rentalTransaction->trx_id,
+public function details(Product $product)
+{
+    $product->load('productSizes');
+    return view('front.details', compact('product'));
+}
+
+public function booking(Product $product)
+{
+    return view('front.booking', compact('product'));
+}
+
+public function booking_save(StoreBookingRequest $request, Product $product)
+{
+    $productSize = $product->productSizes()->findOrFail($request->product_size_id);
+    if ($productSize->stock <= 0) {
+        return back()->withErrors(['product_size_id' => 'Selected size is out of stock.'])->withInput();
+    }
+    $duration = (int) $request->duration;
+    $startedDate = Carbon::parse($request->started_at);
+    $endedDate = $startedDate->copy()->addDays($duration);
+    $totalAmount = $product->price * $duration;
+    $rentalTransaction = null;
+    DB::transaction(function () use ($request, $product, $productSize, $duration, $startedDate, $endedDate, $totalAmount, &$rentalTransaction) {
+        $rentalTransaction = RentalTransaction::create([
+            'trx_id' => 'RENTAL-' . Str::random(8),
+            'user_id' => Auth::id(),
+            'product_id' => $product->id,
+            'name' => $request->name,
+            'phone_number' => $request->phone_number,
+            'started_at' => $startedDate,
+            'ended_at' => $endedDate,
+            'total_amount' => $totalAmount,
+            'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
         ]);
+        $productSize->decrement('stock');
+    });
+    return redirect()->route('front.checkout', [
+        'product' => $product->slug,
+        'transactionId' => $rentalTransaction->trx_id,
+    ]);
+}
+
+public function checkout(Product $product, Request $request)
+{
+    $transactionId = $request->query('transactionId');
+    $rentalTransaction = RentalTransaction::where('trx_id', $transactionId)
+        ->where('product_id', $product->id)
+        ->firstOrFail();
+    $subTotal = $rentalTransaction->product->price * $rentalTransaction->duration;
+    $grandTotal = $rentalTransaction->total_amount;
+    $bankAccounts = [
+        'BCA' => '5545011970 a/n Niken Alfinanda Putri',
+        'BRI' => '626801015467534 a/n Niken Alfinanda Putri',
+    ];
+    return view('front.checkout', compact('product', 'rentalTransaction', 'subTotal', 'grandTotal', 'bankAccounts'));
+}
+
+public function checkout_store(StorePaymentRequest $request)
+{
+    $rentalTransaction = RentalTransaction::where('trx_id', $request->transaction_id)->firstOrFail();
+    if ($rentalTransaction->payment_proof) {
+        Storage::disk('public')->delete($rentalTransaction->payment_proof);
+    }
+    $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+    $fullProofPath = Storage::disk('public')->path($proofPath);
+    OptimizerChainFactory::create()->optimize($fullProofPath);
+    $rentalTransaction->update([
+        'payment_proof' => $proofPath,
+        'payment_method' => $request->payment_method,
+        'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
+    ]);
+    return redirect()->route('front.success.booking', $rentalTransaction->trx_id);
+}
+
+public function success_booking($transactionId)
+{
+    $transaction = RentalTransaction::where('trx_id', $transactionId)->first();
+    if (!$transaction) {
+        $transaction = CustomTransaction::where('trx_id', $transactionId)->first();
+    }
+    if (!$transaction) {
+        abort(404);
+    }
+    return view('front.success_booking', compact('transaction'));
+}
+
+public function transactions()
+{
+    return view('front.transactions');
+}
+
+public function transactions_details(Request $request)
+{
+    $request->validate([
+        'trx_id' => ['required', 'string', 'max:255'],
+        'phone_number' => ['required', 'string', 'max:255'],
+    ]);
+    $trx_id = $request->input('trx_id');
+    $phone_number = $request->input('phone_number');
+    $rentalDetails = RentalTransaction::with('product')
+        ->where('trx_id', $trx_id)
+        ->where('phone_number', $phone_number)
+        ->first();
+    if ($rentalDetails) {
+        $subTotal = $rentalDetails->product->price * $rentalDetails->duration;
+        $grandTotal = $rentalDetails->total_amount;
+        return view('front.transaction_details', compact('subTotal', 'grandTotal'))->with('details', $rentalDetails);
+    }
+    $customDetails = CustomTransaction::where('trx_id', $trx_id)
+        ->where('phone_number', $phone_number)
+        ->first();
+    if ($customDetails) {
+        return redirect()->route('front.custom.details', $customDetails->trx_id);
+    }
+    return back()->withErrors(['error' => 'Transactions not found.']);
+}
+
+public function custom()
+{
+    return view('front.custom');
+}
+
+public function storeCustomOrder(Request $request)
+{
+    $request->validate([
+        'full_name' => ['required', 'string', 'max:255'],
+        'phone_number' => ['required', 'string', 'max:255'],
+        'image_reference_1' => ['required', 'image', 'mimes:jpg,png'],
+        'image_reference_2' => ['nullable', 'image', 'mimes:jpg,png'],
+        'image_reference_3' => ['nullable', 'image', 'mimes:jpg,png'],
+        'material' => ['required', 'string', 'max:255'],
+        'color' => ['required', 'string', 'max:255'],
+        'size_chart_option' => ['required', 'string', 'in:S,M,L,XL,custom'],
+        'lebar_bahu_belakang' => ['nullable', 'numeric', 'required_if:size_chart_option,custom'],
+        'lingkar_panggul' => ['nullable', 'numeric', 'required_if:size_chart_option,custom'],
+        'lingkar_pinggul' => ['nullable', 'numeric', 'required_if:size_chart_option,custom'],
+        'lingkar_dada' => ['nullable', 'numeric', 'required_if:size_chart_option,custom'],
+        'kerung_lengan' => ['nullable', 'numeric', 'required_if:size_chart_option,custom'],
+        'kebaya_preference' => ['required', 'string'],
+        'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'],
+        'date_needed' => ['required', 'date', 'after_or_equal:today'],
+    ]);
+
+    $validatedData = $request->only([
+        'full_name',
+        'phone_number',
+        'material',
+        'color',
+        'kebaya_preference',
+        'amount_to_buy',
+        'date_needed',
+    ]);
+
+    $validatedData['selected_size_chart'] = $request->input('size_chart_option');
+
+    $standardSizes = [
+        'S' => [
+            'lebar_bahu_belakang' => 36,
+            'lingkar_panggul' => 88,
+            'lingkar_pinggul' => 66,
+            'lingkar_dada' => 86,
+            'kerung_lengan' => 42,
+        ],
+        'M' => [
+            'lebar_bahu_belakang' => 38,
+            'lingkar_panggul' => 96,
+            'lingkar_pinggul' => 72,
+            'lingkar_dada' => 92,
+            'kerung_lengan' => 44,
+        ],
+        'L' => [
+            'lebar_bahu_belakang' => 39,
+            'lingkar_panggul' => 108,
+            'lingkar_pinggul' => 78,
+            'lingkar_dada' => 98,
+            'kerung_lengan' => 48,
+        ],
+        'XL' => [
+            'lebar_bahu_belakang' => 40,
+            'lingkar_panggul' => 112,
+            'lingkar_pinggul' => 84,
+            'lingkar_dada' => 104,
+            'kerung_lengan' => 50,
+        ],
+    ];
+
+    if (array_key_exists($validatedData['selected_size_chart'], $standardSizes)) {
+        $selectedStandardSize = $standardSizes[$validatedData['selected_size_chart']];
+        $validatedData['lebar_bahu_belakang'] = $selectedStandardSize['lebar_bahu_belakang'];
+        $validatedData['lingkar_panggul'] = $selectedStandardSize['lingkar_panggul'];
+        $validatedData['lingkar_pinggul'] = $selectedStandardSize['lingkar_pinggul'];
+        $validatedData['lingkar_dada'] = $selectedStandardSize['lingkar_dada'];
+        $validatedData['kerung_lengan'] = $selectedStandardSize['kerung_lengan'];
+    } elseif ($validatedData['selected_size_chart'] === 'custom') {
+        $validatedData['lebar_bahu_belakang'] = $request->input('lebar_bahu_belakang');
+        $validatedData['lingkar_panggul'] = $request->input('lingkar_panggul');
+        $validatedData['lingkar_pinggul'] = $request->input('lingkar_pinggul');
+        $validatedData['lingkar_dada'] = $request->input('lingkar_dada');
+        $validatedData['kerung_lengan'] = $request->input('kerung_lengan');
+    } else {
+        $validatedData['lebar_bahu_belakang'] = null;
+        $validatedData['lingkar_panggul'] = null;
+        $validatedData['lingkar_pinggul'] = null;
+        $validatedData['lingkar_dada'] = null;
+        $validatedData['kerung_lengan'] = null;
     }
 
-    public function checkout(Product $product, Request $request) // Added Request to get transactionId
-    {
-        $transactionId = $request->query('transactionId');
-        $rentalTransaction = RentalTransaction::where('trx_id', $transactionId)
-                                     ->where('product_id', $product->id) // Ensure transaction matches product
-                                     ->firstOrFail();
+    $validatedData['name'] = $validatedData['full_name'];
+    unset($validatedData['full_name']);
 
-        // Calculate subTotal and grandTotal based on the fetched transaction
-        $subTotal = $rentalTransaction->product->price * $rentalTransaction->duration;
-        $grandTotal = $rentalTransaction->total_amount; // Assuming total_amount in DB is already grand total without PPN/Insurance
+    $image1Path = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
+    $fullPath1 = Storage::disk('public')->path($image1Path);
+    OptimizerChainFactory::create()->optimize($fullPath1);
+    $validatedData['image_reference'] = $image1Path;
 
-        // Bank Account Details
-        $bankAccounts = [
-            'BCA' => '5545011970 a/n Niken Alfinanda Putri',
-            'BRI' => '626801015467534 a/n Niken Alfinanda Putri',
-        ];
-
-        return view('front.checkout', compact('product', 'rentalTransaction', 'subTotal', 'grandTotal', 'bankAccounts'));
+    if ($request->hasFile('image_reference_2')) {
+        $image2Path = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
+        $fullPath2 = Storage::disk('public')->path($image2Path);
+        OptimizerChainFactory::create()->optimize($fullPath2);
+        $validatedData['image_reference_2'] = $image2Path;
     }
 
-    public function checkout_store(StorePaymentRequest $request) // Changed Request type hint to StorePaymentRequest
-    {
-        // Validation is now handled by StorePaymentRequest
+    if ($request->hasFile('image_reference_3')) {
+        $image3Path = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
+        $fullPath3 = Storage::disk('public')->path($image3Path);
+        OptimizerChainFactory::create()->optimize($fullPath3);
+        $validatedData['image_reference_3'] = $image3Path;
+    }
 
-        $rentalTransaction = RentalTransaction::where('trx_id', $request->transaction_id)->firstOrFail();
+    $validatedData['user_id'] = Auth::id();
 
-        // Delete old payment proof if it exists
+    $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8);
+
+    $customTransaction = CustomTransaction::create($validatedData);
+
+    return redirect()->route('front.custom.success', $customTransaction->trx_id);
+}
+
+public function contact()
+{
+    return view('front.contact');
+}
+
+public function customTransactionDetails($transactionId)
+{
+    $details = CustomTransaction::where('trx_id', $transactionId)->first();
+    if (!$details) {
+        abort(404);
+    }
+    return view('front.custom_transaction_details', compact('details'));
+}
+
+public function customSuccess($transactionId)
+{
+    $transaction = CustomTransaction::where('trx_id', $transactionId)->first();
+    if (!$transaction) {
+        abort(404);
+    }
+    return view('front.custom_success', compact('transaction'));
+}
+
+public function uploadCustomPaymentProof(Request $request, CustomTransaction $customTransaction)
+{
+    $request->validate([
+        'payment_proof' => ['required', 'image', 'mimes:jpg,png'],
+        'payment_method' => ['required', 'string', 'in:BCA,BRI'],
+        'confirm_payment' => ['accepted'],
+    ]);
+    $proofPath = $request
+        ->file('payment_proof')
+        ->store('custom_payment_proofs', 'public');
+    $fullProofPath = Storage::disk('public')->path($proofPath);
+    OptimizerChainFactory::create()->optimize($fullProofPath);
+    $customTransaction->update([
+        'payment_proof' => $proofPath,
+        'payment_method' => $request->payment_method,
+        'status' => CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION,
+    ]);
+    return back()->with('success', 'Payment proof uploaded successfully. Waiting for admin verification.');
+}
+
+public function cancelCustomOrder(CustomTransaction $customTransaction)
+{
+    if ($customTransaction->status === CustomTransactionStatus::PENDING || $customTransaction->status === CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION) {
+        $customTransaction->update(['status' => CustomTransactionStatus::CANCELLED]);
+        return back()->with('success', 'Custom order cancelled successfully.');
+    }
+    return back()->withErrors(['error' => 'Custom order cannot be cancelled at this stage.']);
+}
+
+public function approveCustomOrder(CustomTransaction $customTransaction)
+{
+    return back()->withErrors(['error' => 'This action is not available in the current workflow.']);
+}
+
+public function cancelRentalOrder(RentalTransaction $rentalTransaction)
+{
+    if (
+        $rentalTransaction->status !== RentalTransactionStatus::COMPLETED &&
+        $rentalTransaction->status !== RentalTransactionStatus::REJECTED &&
+        $rentalTransaction->status !== RentalTransactionStatus::CANCELLED
+    ) {
         if ($rentalTransaction->payment_proof) {
             Storage::disk('public')->delete($rentalTransaction->payment_proof);
         }
-
-        // Store the new payment proof
-        $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
-
-        // Optimize the image
-        $fullProofPath = Storage::disk('public')->path($proofPath);
-        OptimizerChainFactory::create()->optimize($fullProofPath);
-
-        // Update the rental transaction
-        $rentalTransaction->update([
-            'payment_proof' => $proofPath,
-            'payment_method' => $request->payment_method,
-            'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION, // Status for admin verification
-        ]);
-
-        return redirect()->route('front.success.booking', $rentalTransaction->trx_id);
+        $rentalTransaction->update(['status' => RentalTransactionStatus::CANCELLED]);
+        return back()->with('success', 'Rental order cancelled successfully.');
     }
+    return back()->withErrors(['error' => 'Rental order cannot be cancelled at this stage.']);
+}
 
-    public function success_booking($transactionId) // Changed parameter name to transactionId
-    {
-        // Fetch the rental transaction by trx_id
-        $transaction = RentalTransaction::where('trx_id', $transactionId)->first();
+public function redirectToGoogle()
+{
+    return \Socialite::driver('google')->redirect();
+}
 
-        if (!$transaction) {
-            // If not found in rental, check custom transactions (if needed for a combined success page)
-            $transaction = CustomTransaction::where('trx_id', $transactionId)->first();
-        }
-
-        if (!$transaction) {
-            abort(404); // Transaction not found
-        }
-
-        return view('front.success_booking', compact('transaction'));
-    }
-
-    public function transactions()
-    {
-        return view('front.transactions');
-    }
-
-    public function transactions_details(Request $request)
-    {
-        $request->validate([
-            'trx_id' => ['required', 'string', 'max:255'],
-            'phone_number' => ['required', 'string', 'max:255'],
-        ]);
-
-        $trx_id = $request->input('trx_id');
-        $phone_number = $request->input('phone_number');
-
-        // Attempt to find in RentalTransactions
-        $rentalDetails = RentalTransaction::with('product')
-            ->where('trx_id', $trx_id)
-            ->where('phone_number', $phone_number)
-            ->first();
-
-        if ($rentalDetails) {
-            // Calculate subTotal and grandTotal for rental
-            $subTotal = $rentalDetails->product->price * $rentalDetails->duration;
-            $grandTotal = $rentalDetails->total_amount; // Assuming total_amount in DB is already grand total without PPN/Insurance
-
-            return view('front.transaction_details', compact('subTotal', 'grandTotal'))->with('details', $rentalDetails);
-        }
-
-        // Attempt to find in CustomTransactions
-        $customDetails = CustomTransaction::where('trx_id', $trx_id)
-            ->where('phone_number', $phone_number)
-            ->first();
-
-        if ($customDetails) {
-            // Redirect to a new custom transaction details page
-            return redirect()->route('front.custom.details', $customDetails->trx_id); // Need to define this route and view
-        }
-
-        // If not found in either
-        return back()->withErrors(['error' => 'Transactions not found.']);
-    }
-
-    // New method for Custom Kebaya Order form
-    public function custom()
-    {
-        return view('front.custom');
-    }
-
-    // New method to store Custom Kebaya Order
-    public function storeCustomOrder(Request $request)
-    {
-        \Log::error('Custom Order Request:', $request->all());
-
-        $request->validate([
-            'full_name' => ['required', 'string', 'max:255'],
-            'phone_number' => ['required', 'string', 'max:255'],
-            'image_reference_1' => ['required', 'image', 'mimes:jpg,png'],
-            'image_reference_2' => ['nullable', 'image', 'mimes:jpg,png'],
-            'image_reference_3' => ['nullable', 'image', 'mimes:jpg,png'],
-            'kebaya_preference' => ['required', 'string'],
-            'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'],
-            'date_needed' => ['required', 'date', 'after_or_equal:today'],
-        ]);
-
-        $validatedData = $request->only([
-            'full_name',
-            'phone_number',
-            'kebaya_preference',
-            'amount_to_buy',
-            'date_needed',
-        ]);
-
-        $validatedData['name'] = $validatedData['full_name'];
-        unset($validatedData['full_name']);
-
-        // Upload gambar 1 wajib
-        $image1Path = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
-        $fullPath1 = Storage::disk('public')->path($image1Path);
-        OptimizerChainFactory::create()->optimize($fullPath1);
-        $validatedData['image_reference'] = $image1Path;
-
-        // Upload gambar 2 & 3 jika ada
-        if ($request->hasFile('image_reference_2')) {
-            $image2Path = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
-            $fullPath2 = Storage::disk('public')->path($image2Path);
-            OptimizerChainFactory::create()->optimize($fullPath2);
-            $validatedData['image_reference_2'] = $image2Path;
-        }
-
-        if ($request->hasFile('image_reference_3')) {
-            $image3Path = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
-            $fullPath3 = Storage::disk('public')->path($image3Path);
-            OptimizerChainFactory::create()->optimize($fullPath3);
-            $validatedData['image_reference_3'] = $image3Path;
-        }
-
-        $validatedData['user_id'] = Auth::id(); // Associate with authenticated user
-
-        // Generate trx_id
-        $validatedData['trx_id'] = 'CUSTOM-' . Str::random(8);
-
-        // Simpan ke DB
-        $customTransaction = CustomTransaction::create($validatedData);
-
-        return redirect()->route('front.custom.success', $customTransaction->trx_id);
-    }
-
-
-    // New method for Contact page
-    public function contact()
-    {
-        return view('front.contact');
-    }
-
-    // New method for Custom transaction details page
-    public function customTransactionDetails($transactionId)
-    {
-        $details = CustomTransaction::where('trx_id', $transactionId)->first();
-
-        if (!$details) {
-            abort(404); // Transaction not found
-        }
-
-        return view('front.custom_transaction_details', compact('details'));
-    }
-
-    // New method for Custom order success page
-    public function customSuccess($transactionId)
-    {
-        $transaction = CustomTransaction::where('trx_id', $transactionId)->first();
-
-        if (!$transaction) {
-            abort(404); // Transaction not found
-        }
-
-        return view('front.custom_success', compact('transaction'));
-    }
-
-    // New method to handle custom order payment proof upload
-    public function uploadCustomPaymentProof(Request $request, CustomTransaction $customTransaction) // Added CustomTransaction type hint
-    {
-        $request->validate([
-            'payment_proof' => ['required', 'image', 'mimes:jpg,png'], // Validate image file
-            'payment_method' => ['required', 'string', 'in:BCA,BRI'], // Validate payment method
-            'confirm_payment' => ['accepted'], // Validate checkbox
-        ]);
-
-
-        // Store the payment proof
-        $proofPath = $request->file('payment_proof')
-            ->store('custom_payment_proofs', 'public');
-
-        $fullProofPath = Storage::disk('public')->path($proofPath);
-        OptimizerChainFactory::create()->optimize($fullProofPath);
-
-        // Update the custom transaction
-        $customTransaction->update([
-            'payment_proof' => $proofPath,
-            'payment_method' => $request->payment_method,
-            'status' => CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION, // Changed status to PENDING_PAYMENT enum
-        ]);
-
-        return back()->with('success', 'Payment proof uploaded successfully. Waiting for admin verification.');
-    }
-
-    // New method to handle custom order cancellation
-    public function cancelCustomOrder(CustomTransaction $customTransaction) // Added CustomTransaction type hint
-    {
-        // Allow cancellation only if status is pending or pending payment verification
-        if ($customTransaction->status === CustomTransactionStatus::PENDING || $customTransaction->status === CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION) {
-            $customTransaction->update(['status' => CustomTransactionStatus::CANCELLED]);
-            return back()->with('success', 'Custom order cancelled successfully.');
-        }
-
-        return back()->withErrors(['error' => 'Custom order cannot be cancelled at this stage.']);
-    }
-
-    // New method to handle custom order approval by the customer
-    public function approveCustomOrder(CustomTransaction $customTransaction)
-    {
-        // This method is no longer needed in the new workflow as admin provides estimate directly
-        return back()->withErrors(['error' => 'This action is not available in the current workflow.']);
-    }
-
-    // New method to handle rental order cancellation
-    public function cancelRentalOrder(RentalTransaction $rentalTransaction)
-    {
-        // Allow cancellation only if status is not completed, rejected, or already cancelled
-        if (
-            $rentalTransaction->status !== RentalTransactionStatus::COMPLETED &&
-            $rentalTransaction->status !== RentalTransactionStatus::REJECTED &&
-            $rentalTransaction->status !== RentalTransactionStatus::CANCELLED
-        ) {
-            // Delete associated payment proof if it exists
-            if ($rentalTransaction->payment_proof) {
-                Storage::disk('public')->delete($rentalTransaction->payment_proof);
-            }
-            $rentalTransaction->update(['status' => RentalTransactionStatus::CANCELLED]);
-            return back()->with('success', 'Rental order cancelled successfully.');
-        }
-
-        return back()->withErrors(['error' => 'Rental order cannot be cancelled at this stage.']);
-    }
-
-
-    // Need to create methods for:
-    // - Admin actions in Filament (will be in Filament resources)
-
-    // Socialite Methods
-    public function redirectToGoogle()
-    {
-        return \Socialite::driver('google')->redirect();
-    }
-
-    public function handleGoogleCallback()
-    {
-        try {
-            $user = \Socialite::driver('google')->user();
-
-            $findUser = \App\Models\User::where('google_id', $user->id)->first();
-
-            if ($findUser) {
-                \Auth::login($findUser);
-                return redirect()->intended(route('front.index')); // Redirect to intended page or home
+public function handleGoogleCallback()
+{
+    try {
+        $user = \Socialite::driver('google')->user();
+        $findUser = \App\Models\User::where('google_id', $user->id)->first();
+        if ($findUser) {
+            \Auth::login($findUser);
+            return redirect()->intended(route('front.index'));
+        } else {
+            $existingUser = \App\Models\User::where('email', $user->email)->first();
+            if ($existingUser) {
+                $existingUser->google_id = $user->id;
+                $existingUser->google_token = $user->token;
+                $existingUser->save();
+                \Auth::login($existingUser);
+                return redirect()->intended(route('front.index'));
             } else {
-                // Check if a user with the same email already exists
-                $existingUser = \App\Models\User::where('email', $user->email)->first();
-
-                if ($existingUser) {
-                    // If user exists with the same email, link the Google account
-                    $existingUser->google_id = $user->id;
-                    $existingUser->google_token = $user->token;
-                    $existingUser->save();
-
-                    \Auth::login($existingUser);
-                    return redirect()->intended(route('front.index'));
-                } else {
-                    // Create a new user
-                    $newUser = \App\Models\User::create([
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'google_id' => $user->id,
-                        'google_token' => $user->token,
-                        'password' => \Hash::make(Str::random(16)), // Generate a random password
-                    ]);
-
-                    \Auth::login($newUser);
-                    return redirect()->intended(route('front.index'));
-                }
+                $newUser = \App\Models\User::create([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'google_id' => $user->id,
+                    'google_token' => $user->token,
+                    'password' => \Hash::make(Str::random(16)),
+                ]);
+                \Auth::login($newUser);
+                return redirect()->intended(route('front.index'));
             }
-        } catch (\Exception $e) {
-            // Log the error or handle it appropriately
-            \Log::error('Google login failed: ' . $e->getMessage());
-            return redirect(route('front.index'))->withErrors(['google_login' => 'Unable to login with Google. Please try again.']);
         }
+    } catch (\Exception $e) {
+        \Log::error('Google login failed: ' . $e->getMessage());
+        return redirect(route('front.index'))->withErrors(['google_login' => 'Unable to login with Google. Please try again.']);
     }
+}
 
-    public function getComments()
-    {
-        $comments = Comment::latest()->get(); // Ambil semua komentar, urutkan dari terbaru
-        return view('front.contact', compact('comments'));
+public function getComments()
+{
+    return view('front.contact', compact('comments'));
+}
+
+public function storeComment(Request $request)
+{
+    $request->validate([
+        'comment' => ['required', 'string'],
+        'image' => ['nullable', 'image', 'mimes:jpg,png'],
+    ]);
+    $userName = Auth::user()->name;
+    $imagePath = null;
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store('comment_images', 'public');
+        $fullImagePath = Storage::disk('public')->path($imagePath);
+        OptimizerChainFactory::create()->optimize($fullImagePath);
     }
-
-    public function storeComment(Request $request)
-    {
-        $request->validate([
-            'comment' => ['required', 'string'],
-            'image' => ['nullable', 'image', 'mimes:jpg,png'],
-        ]);
-
-        // Ambil nama user yang login
-        $userName = Auth::user()->name;
-
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('comment_images', 'public');
-            $fullImagePath = Storage::disk('public')->path($imagePath);
-            OptimizerChainFactory::create()->optimize($fullImagePath);
-        }
-
-        Comment::create([
-            'user_id' => Auth::id(), // Associate with authenticated user ID
-            'name' => $userName, // Keep name for now, might be used in frontend
-            'comment' => $request->comment,
-            'image' => $imagePath,
-        ]);
-
-        return back()->with('success', 'Komentar berhasil dikirim!');
-    }
+    Comment::create([
+        'user_id' => Auth::id(),
+        'name' => $userName,
+        'comment' => $request->comment,
+        'image' => $imagePath,
+    ]);
+    return back()->with('success', 'Komentar berhasil dikirim!');
+}
 }
