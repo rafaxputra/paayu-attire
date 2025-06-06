@@ -51,7 +51,7 @@
                         <p class="text-muted mb-0" style="font-size: 0.9rem;">Product: {{ $transaction->product->name }}</p>
                         <p class="text-muted mb-0" style="font-size: 0.9rem;">Dates: {{ $transaction->started_at->format('d M Y') }} - {{ $transaction->ended_at->format('d M Y') }}</p>
                         <p class="text-muted mb-0" style="font-size: 0.9rem;">Total: Rp {{ Number::format($transaction->total_amount, locale: 'id') }}</p>
-                        <p class="text-muted mb-0" style="font-size: 0.9rem;">Status: {{ $transaction->is_paid ? 'Paid' : 'Pending Payment' }}</p>
+                        <p class="text-muted mb-0" style="font-size: 0.9rem;">Status: {{ $transaction->status->getLabel() }}</p>
                         <a href="{{ route('front.transactions.details', ['trx_id' => $transaction->trx_id, 'phone_number' => $transaction->phone_number]) }}" class="btn btn-sm btn-outline-secondary mt-2">View Details</a>
                     </div>
                 @empty
