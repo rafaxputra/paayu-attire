@@ -39,90 +39,190 @@
                 </div>
             </div>
 
-        <div class="card p-3">
-            <p class="fw-semibold mb-2">Order Progress</p>
-            <div class="d-flex align-items-center justify-content-between">
-                @php
-                    $statuses = [\App\Enums\CustomTransactionStatus::PENDING, \App\Enums\CustomTransactionStatus::PENDING_PAYMENT, \App\Enums\CustomTransactionStatus::IN_PROGRESS, \App\Enums\CustomTransactionStatus::COMPLETED];
-                    $currentStatusIndex = $details->getProgressStepIndex();
-                @endphp
-
-                @foreach ($statuses as $index => $status)
-                    <div class="d-flex flex-column align-items-center">
-                        <div class="rounded-circle
-                            @if ($status === \App\Enums\CustomTransactionStatus::PENDING && $details->status === \App\Enums\CustomTransactionStatus::REJECTED) bg-danger text-white
-                            @elseif ($currentStatusIndex >= $index) bg-primary text-white
-                            @else bg-secondary text-dark
-                            @endif"
-                            style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;">
-                            {{ $index + 1 }}
-                        </div>
-                        <p class="text-center" style="font-size: 0.8rem;">
-                            @if ($status === \App\Enums\CustomTransactionStatus::PENDING && $details->status === \App\Enums\CustomTransactionStatus::REJECTED)
-                                Pesanan Ditolak
-                            @else
-                                {{ $status->getLabel() }}
-                            @endif
-                        </p>
-                    </div>
-
-                @endforeach
-            </div>
-        </div>
-
-        {{-- Menampilkan informasi pembayaran setelah pesanan diterima --}}
-        @if ($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED)
-            <section class="d-flex flex-column gap-4">
-                <h2 class="h5 fw-semibold"><i class="bi bi-wallet"></i> Payment Details</h2>
+            {{-- Order Progress --}}
+            @if ($details->status !== \App\Enums\CustomTransactionStatus::REJECTED && $details->status !== \App\Enums\CustomTransactionStatus::CANCELLED && $details->status !== \App\Enums\CustomTransactionStatus::PAYMENT_FAILED)
                 <div class="card p-3">
-                    <p class="fw-semibold">Total yang Harus Dibayar: <span class="fw-bold">Rp {{ number_format($details->admin_price, 0, ',', '.') }}</span></p>
-                    <p class="fw-semibold">Pesanan Selesai Pada Tanggal: {{ $details->admin_estimated_completion_date ? $details->admin_estimated_completion_date->format('d m Y') : '-' }}</p>
-                    <p class="mb-0">Tolong Transfer di Nomer Rekening dibawah ini:</p>
-                    <div class="d-flex flex-column gap-2 mt-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-bank fs-5"></i>
-                            <p class="fw-semibold mb-0">Bank BCA: 5545011970 a/n Niken Alfinanda Putri</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-bank fs-5"></i>
-                            <p class="fw-semibold mb-0">Bank BRI: 626801015467534 a/n Niken Alfinanda Putri</p>
-                        </div>
+                    <p class="fw-semibold mb-2">Order Progress</p>
+                    <div class="d-flex align-items-start position-relative" style="width: 100%; padding: 10px 0;">
+                        @php
+                            $statuses = [
+                                \App\Enums\CustomTransactionStatus::PENDING,
+                                \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION,
+                                \App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED,
+                                \App\Enums\CustomTransactionStatus::IN_PROGRESS,
+                                \App\Enums\CustomTransactionStatus::COMPLETED,
+                            ];
+                            $statusLabels = [
+                                \App\Enums\CustomTransactionStatus::PENDING->value => 'Pending<br>Verification',
+                                \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION->value => 'Pending<br>Payment',
+                                \App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED->value => 'Payment<br>Validated',
+                                \App\Enums\CustomTransactionStatus::IN_PROGRESS->value => 'In<br>Progress',
+                                \App\Enums\CustomTransactionStatus::COMPLETED->value => 'Completed',
+                            ];
+
+                            $currentStatusIndex = match ($details->status) {
+                                \App\Enums\CustomTransactionStatus::PENDING => 0,
+                                \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION, \App\Enums\CustomTransactionStatus::PAYMENT_FAILED => 1,
+                                \App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED => 2,
+                                \App\Enums\CustomTransactionStatus::IN_PROGRESS => 3,
+                                \App\Enums\CustomTransactionStatus::COMPLETED => 4,
+                                default => 0,
+                            };
+                        @endphp
+
+                        @foreach ($statuses as $index => $status)
+                            <div class="d-flex flex-column align-items-center" style="flex: 1;">
+                                <div class="rounded-circle mb-1
+                                    @if ($currentStatusIndex >= $index) bg-primary text-white
+                                    @else bg-secondary text-dark
+                                    @endif"
+                                    style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;">
+                                    {{ $index + 1 }}
+                                </div>
+                                <p class="text-center" style="font-size: 0.85rem; margin-top: 5px;">
+                                    {!! $statusLabels[$status->value] ?? $status->getLabel() !!}
+                                </p>
+                            </div>
+
+                            @if ($index < count($statuses) - 1)
+                                <div class="flex-grow-1 bg-secondary mt-3" style="height: 5px;"></div>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
+            @endif
 
-                {{-- Form Upload Bukti Pembayaran --}}
-                <form id="payment-upload-form" action="{{ route('front.custom.uploadPaymentProof', $details->id) }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-4 mt-3">
-                    @csrf
-                    <div class="d-flex flex-column gap-2">
-                        <label for="payment_method" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cash-coin"></i> Payment Method</label>
-                        <select name="payment_method" id="payment_method" class="form-select" required>
-                            <option value="">Pilih Bank</option>
-                            <option value="BCA">BCA</option>
-                            <option value="BRI">BRI</option>
-                        </select>
+            {{-- Dynamic Status Messages and Actions --}}
+            @php
+                $statusText = '';
+                $statusIcon = '';
+                $statusClass = '';
+                $additionalMessage = '';
+            @endphp
+
+            <div class="card p-3 d-flex flex-row align-items-center gap-3
+                @php
+                    switch ($details->status) {
+                        case \App\Enums\CustomTransactionStatus::PENDING:
+                            echo 'bg-warning text-dark';
+                            $statusText = 'Pending Verification';
+                            $statusIcon = 'bi-hourglass-split';
+                            $additionalMessage = 'Pesanan custom Anda sedang menunggu verifikasi dan estimasi harga dari admin. Mohon tunggu pemberitahuan selanjutnya.';
+                            break;
+                        case \App\Enums\CustomTransactionStatus::REJECTED:
+                            echo 'bg-danger text-white';
+                            $statusText = 'Pesanan Ditolak';
+                            $statusIcon = 'bi-x-circle';
+                            $additionalMessage = 'Maaf, pesanan custom Anda telah ditolak. Silakan hubungi layanan pelanggan untuk informasi lebih lanjut.';
+                            break;
+                        case \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION:
+                            echo 'bg-info text-dark';
+                            $statusText = 'Pending Payment Verification';
+                            $statusIcon = 'bi-cash-coin';
+                            $additionalMessage = 'Admin telah memberikan estimasi harga dan tanggal penyelesaian. Silakan lakukan pembayaran dan unggah bukti pembayaran.';
+                            break;
+                        case \App\Enums\CustomTransactionStatus::PAYMENT_FAILED:
+                            echo 'bg-danger text-white';
+                            $statusText = 'Payment Failed';
+                            $statusIcon = 'bi-x-circle';
+                            $additionalMessage = 'Bukti pembayaran Anda tidak valid atau pembayaran gagal. Mohon unggah ulang bukti pembayaran yang benar atau hubungi layanan pelanggan.';
+                            break;
+                        case \App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED:
+                            echo 'bg-success text-white';
+                            $statusText = 'Payment Validated';
+                            $statusIcon = 'bi-check-circle';
+                            $additionalMessage = 'Pembayaran Anda sudah kami terima. Pesanan custom Anda akan segera diproses.';
+                            break;
+                        case \App\Enums\CustomTransactionStatus::IN_PROGRESS:
+                            echo 'bg-primary text-white';
+                            $statusText = 'In Progress';
+                            $statusIcon = 'bi-gear';
+                            $additionalMessage = 'Pesanan custom Anda sedang dalam proses pengerjaan. Kami akan memberitahu Anda jika sudah selesai.';
+                            break;
+                        case \App\Enums\CustomTransactionStatus::COMPLETED:
+                            echo 'bg-success text-white';
+                            $statusText = 'Completed';
+                            $statusIcon = 'bi-check-all';
+                            $additionalMessage = 'Pesanan custom Anda telah selesai dan siap diambil. Anda dapat mengambil pesanan custom Anda di alamat yang tertera <a href="' . route('front.contact') . '" class="text-white text-decoration-underline">di sini</a>.';
+                            break;
+                        case \App\Enums\CustomTransactionStatus::CANCELLED:
+                            echo 'bg-secondary text-white';
+                            $statusText = 'Cancelled';
+                            $statusIcon = 'bi-slash-circle';
+                            $additionalMessage = 'Pesanan custom Anda telah dibatalkan.';
+                            break;
+                    }
+                @endphp
+            ">
+                <div class="flex-shrink-0">
+                    <i class="bi {{ $statusIcon }} fs-4"></i>
+                </div>
+                <div class="flex-grow-1 d-flex flex-column gap-1">
+                    <div class="d-flex align-items-center gap-1">
+                        <p class="fw-semibold mb-0" style="font-size: 0.9rem;">{{ $statusText }}</p>
+                        @if (in_array($details->status, [\App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED, \App\Enums\CustomTransactionStatus::COMPLETED]))
+                            <i class="bi bi-patch-check-fill"></i>
+                        @endif
                     </div>
-                    <div class="d-flex flex-column gap-2">
-                        <label for="payment_proof" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-upload"></i> Upload Proof</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-upload"></i>
-                            </span>
-                            <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept=".jpg,.png" required>
-                        </div>
-                        <small class="form-text text-muted">Accepted formats: JPG, PNG</small>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="confirm_payment" name="confirm_payment" required>
-                        <label class="form-check-label fw-semibold" for="confirm_payment">
-                            Saya benar telah transfer pembayaran
-                        </label>
-                    </div>
-                    <button type="submit" form="payment-upload-form" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2">
-                        <i class="bi bi-check-circle"></i> Confirm Payment
-                    </button>
-                </form>
-            </section>
-        @endif
+                    <p class="mb-0" style="font-size: 0.8rem;">{!! $additionalMessage !!}</p>
+
+                    {{-- Actions based on status --}}
+                    @if ($details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION || $details->status === \App\Enums\CustomTransactionStatus::PAYMENT_FAILED)
+                        {{-- Form Upload Bukti Pembayaran --}}
+                        <form id="payment-upload-form" action="{{ route('front.custom.uploadPaymentProof', $details->id) }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-4 mt-3">
+                            @csrf
+                            <div class="d-flex flex-column gap-2">
+                                <label for="payment_method" class="form-label text-white fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cash-coin"></i> Payment Method</label>
+                                <select name="payment_method" id="payment_method" class="form-select" required>
+                                    <option value="">Pilih Bank</option>
+                                    <option value="BCA">BCA</option>
+                                    <option value="BRI">BRI</option>
+                                </select>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                <label for="payment_proof" class="form-label text-white fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-upload"></i> Upload Proof</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-upload"></i>
+                                    </span>
+                                    <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept=".jpg,.png" required>
+                                </div>
+                                <small class="form-text text-white">Accepted formats: JPG, PNG</small>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirm_payment" name="confirm_payment" required>
+                                <label class="form-check-label text-white fw-semibold" for="confirm_payment">
+                                    Saya benar telah transfer pembayaran
+                                </label>
+                            </div>
+                            <button type="submit" form="payment-upload-form" class="btn btn-light rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-check-circle"></i> Confirm Payment
+                            </button>
+                        </form>
+                         <form action="{{ route('front.custom.cancel', $details->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <button type="submit" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-x-circle"></i> Cancel Order</button>
+                        </form>
+                    @endif
+
+                     @if($details->status === \App\Enums\CustomTransactionStatus::PENDING)
+                         <form action="{{ route('front.custom.cancel', $details->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <button type="submit" class="btn btn-danger rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-x-circle"></i> Cancel Order</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Show uploaded proof if exists and status is not PENDING or REJECTED --}}
+            @if($details->payment_proof && $details->status !== \App\Enums\CustomTransactionStatus::PENDING && $details->status !== \App\Enums\CustomTransactionStatus::REJECTED)
+                <div class="d-flex flex-column gap-2">
+                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-image"></i> Uploaded Payment Proof</h2>
+                    <img src="{{ Storage::url($details->payment_proof) }}" alt="Payment Proof" class="img-fluid rounded-md">
+                </div>
+            @endif
 
 
             <section class="d-flex flex-column gap-4">
@@ -157,7 +257,8 @@
                     @else
                         <p class="mb-0">-</p>
                     @endif
-
+                </div>
+                <div class="d-flex flex-column gap-2">
                     {{-- Image Reference 2 --}}
                     <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
                         <i class="bi bi-image"></i> Image Reference 2:
@@ -167,7 +268,8 @@
                     @else
                         <p class="mb-0">-</p>
                     @endif
-
+                </div>
+                <div class="d-flex flex-column gap-2">
                     {{-- Image Reference 3 --}}
                     <p class="fw-semibold mb-0 d-flex align-items-center gap-2 mt-3">
                         <i class="bi bi-image"></i> Image Reference 3:
@@ -192,7 +294,8 @@
                 </div>
                 </section>
 
-            @if($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED || $details->status === \App\Enums\CustomTransactionStatus::IN_PROGRESS || $details->status === \App\Enums\CustomTransactionStatus::COMPLETED || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT || $details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT)
+            {{-- Show Admin Response if price or estimated completion date are set --}}
+            @if($details->admin_price || $details->admin_estimated_completion_date)
                 <section class="d-flex flex-column gap-4">
                     <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-chat-dots"></i> Admin Response</h2> {{-- Added icon --}}
                     @if($details->admin_price)
@@ -223,148 +326,19 @@
                 </section>
             @endif
 
-
-            @if($details->status === \App\Enums\CustomTransactionStatus::ACCEPTED && !$details->is_paid)
-                <section class="d-flex flex-column gap-4">
-                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-question-circle"></i> Action Required</h2> {{-- Added icon --}}
-                    <p class="mb-0">Your custom order has been accepted with the details above. Please approve to proceed to payment or cancel the order.</p>
-
-                    <form action="{{ route('front.custom.approve', $details->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-success rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-check-circle"></i> Approve Order and Proceed to Payment</button> {{-- Added icon and flex/gap --}}
-                    </form>
-
-                    <form action="{{ route('front.custom.cancel', $details->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-                        <button type="submit" class="btn btn-danger rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-x-circle"></i> Cancel Order</button> {{-- Added icon and flex/gap --}}
-                    </form>
-                </section>
-            @endif
-
-            {{-- Show payment instructions and upload form if status is pending_payment and not paid --}}
-            @if($details->status === \App\Enums\CustomTransactionStatus::PENDING_PAYMENT && !$details->is_paid)
-                <section class="d-flex flex-column gap-4">
-                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-wallet"></i> Payment</h2> {{-- Added icon --}}
-                    <p class="mb-0">Please make the payment of Rp {{ Number::format($details->admin_price, locale: 'id') }} to one of the following accounts:</p>
-                    <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-bank"></i> Bank BCA:</p> {{-- Added icon --}}
-                        <p class="mb-0">5545011970 a/n Niken Alfinanda Putri</p>
-                    </div>
-                    <div class="d-flex flex-column gap-2">
-                        <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-bank"></i> Bank BRI:</p> {{-- Added icon --}}
-                        <p class="mb-0">626801015467534 a/n Niken Alfinanda Putri</p>
-                    </div>
-
-                    <form id="payment-upload-form" action="{{ route('front.custom.uploadPaymentProof', $details->id) }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-4 mt-3">
-                        @csrf
-                        <div class="d-flex flex-column gap-2">
-                            <label for="payment_method" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-cash-coin"></i> Payment Method</label> {{-- Added icon --}}
-                            <select name="payment_method" id="payment_method" class="form-select" required>
-                                <option value="">Select Bank</option>
-                                <option value="BCA">BCA</option>
-                                <option value="BRI">BRI</option>
-                            </select>
-                        </div>
-                        <div class="d-flex flex-column gap-2">
-                            <label for="payment_proof" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-upload"></i> Upload Proof</label> {{-- Added icon --}}
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-upload"></i>
-                                </span>
-                                <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept=".jpg,.png" required>
-                            </div>
-                            <small class="form-text text-muted">Accepted formats: JPG, PNG</small>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="confirm_payment" name="confirm_payment" required>
-                            <label class="form-check-label fw-semibold" for="confirm_payment">
-                                Saya benar telah transfer pembayaran
-                            </label>
-                        </div>
-                        <button type="submit" form="payment-upload-form" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-check-circle"></i> Confirm Payment</button> {{-- Moved button here --}}
-                    </form>
-                </section>
-            @endif
-
-            @if($details->payment_proof && $details->status !== \App\Enums\CustomTransactionStatus::PENDING_PAYMENT) {{-- Show uploaded proof if exists and not in pending_payment state --}}
-                <div class="d-flex flex-column gap-2">
-                    <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-image"></i> Uploaded Payment Proof</h2>
-                    <img src="{{ Storage::url($details->payment_proof) }}" alt="Payment Proof" class="img-fluid rounded-md">
-                </div>
-            @endif
-
-            @if($details->is_paid)
-                 <div class="card p-3 d-flex flex-row align-items-center gap-3 bg-success text-white">
-                    <div class="flex-shrink-0">
-                        <i class="bi bi-check-circle fs-4"></i>
-                    </div>
-                    <div class="flex-grow-1 d-flex flex-column gap-1">
-                        <div class="d-flex align-items-center gap-1">
-                            <p class="fw-semibold mb-0" style="font-size: 0.9rem;">Payment Success</p>
-                            <i class="bi bi-patch-check-fill"></i>
-                        </div>
-                        <p class="mb-0" style="font-size: 0.8rem;">Pembayaran Anda sudah kami terima. Anda dapat mengambil pesanan custom Anda pada tanggal {{ $details->admin_estimated_completion_date->format('d m Y') }} di alamat yang tertera <a href="{{ route('front.contact') }}" class="text-white text-decoration-underline">di sini</a>.</p>
-                    </div>
-                </div>
-            @endif
-
-            {{-- Keep Cancel button visible for pending status --}}
-            @if($details->status === \App\Enums\CustomTransactionStatus::PENDING)
-                <section class="d-flex flex-column gap-4">
-                    <form action="{{ route('front.custom.cancel', $details->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-                        <button type="submit" class="btn btn-danger rounded-pill px-4 py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"><i class="bi bi-x-circle"></i> Cancel Order</button> {{-- Added icon and flex/gap --}}
-                    </form>
-                </section>
-            @endif
-
             <div class="p-3">
                 <a href="https://wa.me/6285183004324?text={{ urlencode('Hello, I would like to inquire about my custom order with ID: ' . $details->trx_id) }}" class="btn btn-success rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> WhatsApp Consultation</a> {{-- Added icon and flex/gap --}}
             </div>
 
         </section>
 
-        {{-- Removed Fixed bottom bar for payment confirmation --}}
-
-
+        {{-- Bottom Contact Button --}}
         <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
             <div class="container main-content-container">
-                <ul class="nav justify-content-around py-3">
-                    <li class="nav-item">
-                        <a class="nav-link text-center text-muted" href="{{ route('front.index') }}">
-                             <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-house-door bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Browse</p>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-center text-dark" href="{{ route('front.transactions') }}">
-                             <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-receipt-cutoff bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                    <a class="nav-link text-center text-muted" href="{{ route('front.custom') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                        </div>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-center text-muted" href="{{ route('front.contact') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-person bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
-                        </div>
-                    </a>
-                </li>
-            </ul>
+                <div class="d-flex align-items-center justify-content-between p-3">
+                    <a href="https://wa.me/6285183004324" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Hubungi Layanan Pelanggan</a>
+                </div>
+            </div>
         </div>
     </main>
 @endsection

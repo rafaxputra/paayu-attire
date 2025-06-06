@@ -341,7 +341,7 @@ class FrontController extends Controller
         $customTransaction->update([
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
-            'status' => CustomTransactionStatus::PENDING_PAYMENT, // Changed status to PENDING_PAYMENT enum
+            'status' => CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION, // Changed status to PENDING_PAYMENT enum
         ]);
 
         return back()->with('success', 'Payment proof uploaded successfully. Waiting for admin verification.');
@@ -350,8 +350,8 @@ class FrontController extends Controller
     // New method to handle custom order cancellation
     public function cancelCustomOrder(CustomTransaction $customTransaction) // Added CustomTransaction type hint
     {
-        // Allow cancellation only if status is pending or accepted
-        if ($customTransaction->status === CustomTransactionStatus::PENDING->value || $customTransaction->status === CustomTransactionStatus::ACCEPTED->value) {
+        // Allow cancellation only if status is pending or pending payment verification
+        if ($customTransaction->status === CustomTransactionStatus::PENDING || $customTransaction->status === CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION) {
             $customTransaction->update(['status' => CustomTransactionStatus::CANCELLED]);
             return back()->with('success', 'Custom order cancelled successfully.');
         }
@@ -362,15 +362,8 @@ class FrontController extends Controller
     // New method to handle custom order approval by the customer
     public function approveCustomOrder(CustomTransaction $customTransaction)
     {
-        // Allow approval only if status is accepted and not paid
-        if ($customTransaction->status->value === CustomTransactionStatus::ACCEPTED->value) {
-            $customTransaction->status = CustomTransactionStatus::PENDING_PAYMENT;
-            $customTransaction->save();
-            return redirect()->route('front.custom.details', $customTransaction->trx_id)->with('success', 'Order approved. Please proceed with payment.');
-        }
-
-
-        return back()->withErrors(['error' => 'Custom order cannot be approved at this stage.']);
+        // This method is no longer needed in the new workflow as admin provides estimate directly
+        return back()->withErrors(['error' => 'This action is not available in the current workflow.']);
     }
 
     // New method to handle rental order cancellation

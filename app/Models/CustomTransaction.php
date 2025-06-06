@@ -24,7 +24,6 @@ class CustomTransaction extends Model
         'admin_price',
         'admin_estimated_completion_date',
         'status',
-        'is_paid',
         'payment_proof',
         'payment_method',
     ];
@@ -33,7 +32,6 @@ class CustomTransaction extends Model
     protected $casts = [
         'date_needed' => 'date',
         'admin_estimated_completion_date' => 'date',
-        'is_paid' => 'boolean',
         'status' => CustomTransactionStatus::class, // Cast status to the enum
     ];
 
@@ -47,10 +45,9 @@ class CustomTransaction extends Model
     {
         $this->attributes['admin_price'] = $value;
 
-        // If the status is 'accepted' and admin_price is set, change status to 'in_progress'
-        // The 'in_progress' status is already in the CustomTransactionStatus enum
-        if ($this->status === CustomTransactionStatus::ACCEPTED && !is_null($value)) { // Compare with enum instance
-            $this->attributes['status'] = CustomTransactionStatus::IN_PROGRESS; // Use enum case
+        // If the status is 'pending' and admin_price is set, change status to 'pending_payment_verification'
+        if ($this->status === CustomTransactionStatus::PENDING && !is_null($value)) { // Compare with enum instance
+            $this->attributes['status'] = CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION; // Use enum case
         }
     }
 
@@ -62,11 +59,11 @@ class CustomTransaction extends Model
     public function getProgressStepIndex(): int
     {
         return match ($this->status) {
-            CustomTransactionStatus::PENDING, CustomTransactionStatus::REJECTED => 0,
-            CustomTransactionStatus::ACCEPTED, CustomTransactionStatus::PENDING_PAYMENT => 1,
-            CustomTransactionStatus::IN_PROGRESS => 2,
-            CustomTransactionStatus::COMPLETED => 3,
-            CustomTransactionStatus::CANCELLED => 0, // Or a different step if needed for cancelled
+            CustomTransactionStatus::PENDING, CustomTransactionStatus::REJECTED, CustomTransactionStatus::CANCELLED => 0,
+            CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION, CustomTransactionStatus::PAYMENT_FAILED => 1,
+            CustomTransactionStatus::PAYMENT_VALIDATED => 2,
+            CustomTransactionStatus::IN_PROGRESS => 3,
+            CustomTransactionStatus::COMPLETED => 4,
         };
     }
 

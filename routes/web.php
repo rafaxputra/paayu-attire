@@ -17,7 +17,7 @@ Route::name('front.')->group(function () {
     Route::get('/booking/{product:slug}', [FrontController::class, 'booking'])->name('booking');
     Route::post('/booking/{product:slug}/save', [FrontController::class, 'booking_save'])->name('booking_save');
 
-    Route::get('/success-booking/{transaction}', [FrontController::class, 'success.booking']);
+    Route::get('/success-booking/{transaction}', [FrontController::class, 'success_booking'])->name('success.booking');
 
     Route::post('/checkout/finish', [FrontController::class, 'checkout_store'])->name('checkout.store');
 
@@ -26,11 +26,13 @@ Route::name('front.')->group(function () {
     // Custom Kebaya Order Routes
     Route::get('/custom', [FrontController::class, 'custom'])->name('custom');
     Route::post('/custom/order', [FrontController::class, 'storeCustomOrder'])->name('custom.order.store');
-    Route::get('/custom/details/{customTransaction}', [FrontController::class, 'custom.details']);
+    
+Route::get('/custom/details/{customTransaction}', [FrontController::class, 'customTransactionDetails'])->name('custom.details');
+Route::get('/custom/success/{customTransaction}', [FrontController::class, 'customSuccess'])->name('custom.success');
     Route::post('/custom/details/{customTransaction}/upload-payment-proof', [FrontController::class, 'uploadCustomPaymentProof'])->name('custom.uploadPaymentProof');
     Route::put('/custom/details/{customTransaction}/cancel', [FrontController::class, 'cancelCustomOrder'])->name('custom.cancel');
     Route::post('/custom/approve/{customTransaction}', [FrontController::class, 'approveCustomOrder'])->name('custom.approve');
-    Route::get('/custom/success/{customTransaction}', [FrontController::class, 'custom.success']);
+    
 
     // Contact Page Route
     Route::get('/contact', [FrontController::class, 'contact'])->name('contact');

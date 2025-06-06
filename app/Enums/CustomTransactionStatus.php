@@ -8,22 +8,24 @@ use Filament\Support\Contracts\HasLabel;
 
 enum CustomTransactionStatus: string implements HasLabel, HasColor
 {
-    case PENDING = 'pending';
-    case ACCEPTED = 'accepted';
-    case REJECTED = 'rejected';
-    case IN_PROGRESS = 'in_progress';
-    case PENDING_PAYMENT = 'pending_payment'; // Added pending payment status
-    case COMPLETED = 'completed';
-    case CANCELLED = 'cancelled';
+    case PENDING = 'pending'; // Pending verification by admin
+    case REJECTED = 'rejected'; // Rejected by admin
+    case PENDING_PAYMENT_VERIFICATION = 'pending_payment_verification'; // Admin provided estimate, waiting for customer payment proof
+    case PAYMENT_FAILED = 'payment_failed'; // Customer payment proof invalid
+    case PAYMENT_VALIDATED = 'payment_validated'; // Admin validated payment proof
+    case IN_PROGRESS = 'in_progress'; // Payment validated, custom order is being made
+    case COMPLETED = 'completed'; // Custom order is finished and ready for pickup
+    case CANCELLED = 'cancelled'; // Cancelled by customer or admin
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::PENDING => 'Pending',
-            self::ACCEPTED => 'Accepted',
+            self::PENDING => 'Pending Verification',
             self::REJECTED => 'Rejected',
+            self::PENDING_PAYMENT_VERIFICATION => 'Pending Payment Verification',
+            self::PAYMENT_FAILED => 'Payment Failed',
+            self::PAYMENT_VALIDATED => 'Payment Validated',
             self::IN_PROGRESS => 'In Progress',
-            self::PENDING_PAYMENT => 'Pending Payment', // Added label for pending payment
             self::COMPLETED => 'Completed',
             self::CANCELLED => 'Cancelled',
         };
@@ -33,10 +35,11 @@ enum CustomTransactionStatus: string implements HasLabel, HasColor
     {
         return match ($this) {
             self::PENDING => Color::Amber,
-            self::ACCEPTED => Color::Blue,
             self::REJECTED => Color::Red,
+            self::PENDING_PAYMENT_VERIFICATION => Color::Blue,
+            self::PAYMENT_FAILED => Color::Danger,
+            self::PAYMENT_VALIDATED => Color::Green,
             self::IN_PROGRESS => Color::Yellow,
-            self::PENDING_PAYMENT => Color::Blue, // Changed color to Blue
             self::COMPLETED => Color::Green,
             self::CANCELLED => Color::Gray,
         };

@@ -14,6 +14,10 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Models\User; // Import User model
+use Filament\Tables\Actions\Action; // Added for custom actions
+use Filament\Tables\Actions\ActionGroup; // Added for action grouping
+use Filament\Forms\Components\TextInput; // Import TextInput
+use Filament\Forms\Components\DatePicker; // Import DatePicker
 
 class CustomTransactionResource extends Resource
 {
@@ -79,12 +83,9 @@ class CustomTransactionResource extends Resource
                 Forms\Components\DatePicker::make('admin_estimated_completion_date')
                     ->visible(fn (string $operation): bool => $operation === 'edit'), // Only visible on edit
                 Forms\Components\Select::make('status') // Changed to Select
-                    ->options(\App\Enums\CustomTransactionStatus::class) // Use enum for options
+                    ->options(CustomTransactionStatus::class) // Use enum for options
                     ->required()
                     ->default(CustomTransactionStatus::PENDING), // Use enum default
-                Forms\Components\Toggle::make('is_paid')
-                    ->required()
-                    ->disabled(), // Disable is_paid toggle in the form
                 Forms\Components\FileUpload::make('payment_proof') // Changed to FileUpload
                     ->image()
                     ->optimize('webp')
@@ -133,18 +134,9 @@ class CustomTransactionResource extends Resource
                 Tables\Columns\TextColumn::make('admin_estimated_completion_date')
                     ->date()
                     ->sortable(),
-
-                // Removed Delivery Info Columns
-                // Tables\Columns\TextColumn::make('delivery_type')
-                //     ->searchable()
-                //     ->sortable(),
-                // Tables\Columns\TextColumn::make('address')
-                //     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->searchable()
                     ->badge(), // Display status as a badge, Filament will use the enum's HasColor and HasLabel
-                Tables\Columns\IconColumn::make('is_paid')
-                    ->boolean(),
                 Tables\Columns\ImageColumn::make('payment_proof') // Changed to ImageColumn
                     ->label('Payment Proof'),
                 Tables\Columns\TextColumn::make('payment_method')
@@ -162,50 +154,85 @@ class CustomTransactionResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('acceptOrder')
-                    ->label('Accept Order')
-                    ->button()
-                    ->color('success')
-                    ->icon('heroicon-o-check-circle')
-                    ->requiresConfirmation()
-                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING) // Use enum
-                    ->action(function (CustomTransaction $record) {
-                        $record->update(['status' => CustomTransactionStatus::ACCEPTED]); // Use enum
-                    }),
-                Tables\Actions\Action::make('rejectOrder')
-                    ->label('Reject Order')
-                    ->button()
-                    ->color('danger')
-                    ->icon('heroicon-o-x-circle')
-                    ->requiresConfirmation()
-                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING) // Use enum
-                    ->action(function (CustomTransaction $record) {
-                        $record->update(['status' => CustomTransactionStatus::REJECTED]); // Use enum - assuming REJECTED exists or needs to be added
-                    }),
-                Tables\Actions\Action::make('verifyPayment')
-                    ->label('Verify Payment')
-                    ->button()
-                    ->color('success')
+                Action::make('provideEstimate')
+                    ->label('Provide Estimate')
                     ->icon('heroicon-o-currency-dollar')
-                    ->requiresConfirmation()
-                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING_PAYMENT && !$record->is_paid) // Visible when pending payment and not paid
-                    ->action(function (CustomTransaction $record) {
-                        $record->update([
-                            'is_paid' => true,
-                            'status' => CustomTransactionStatus::IN_PROGRESS, // Change status to In Progress after payment verification
-                        ]);
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING)
+                    ->form([
+                        TextInput::make('admin_price')
+                            ->label('Estimated Price (IDR)')
+                            ->required()
+                            ->numeric()
+                            ->prefix('IDR'),
+                        DatePicker::make('admin_estimated_completion_date')
+                            ->label('Estimated Completion Date')
+                            ->required(),
+                    ])
+                    ->action(function (CustomTransaction $record, array $data): void {
+                        $record->admin_price = $data['admin_price'];
+                        $record->admin_estimated_completion_date = $data['admin_estimated_completion_date'];
+                        $record->status = CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION;
+                        $record->save();
                     }),
-                Tables\Actions\Action::make('markAsCompleted')
-                    ->label('Mark as Completed')
-                    ->button()
+                Action::make('rejectOrder')
+                    ->label('Reject Order')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING)
+                    ->action(function (CustomTransaction $record) {
+                        $record->update(['status' => CustomTransactionStatus::REJECTED]);
+                    }),
+                Action::make('validatePayment')
+                    ->label('Validate Payment')
+                    ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->icon('heroicon-o-check-badge')
                     ->requiresConfirmation()
-                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::IN_PROGRESS) // Visible when in progress
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION && $record->payment_proof !== null)
                     ->action(function (CustomTransaction $record) {
-                        $record->update(['status' => CustomTransactionStatus::COMPLETED]); // Use enum
+                        $record->update(['status' => CustomTransactionStatus::PAYMENT_VALIDATED]);
                     }),
+                 Action::make('invalidatePayment')
+                    ->label('Invalidate Payment')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION && $record->payment_proof !== null)
+                    ->action(function (CustomTransaction $record) {
+                        $record->update(['status' => CustomTransactionStatus::PAYMENT_FAILED]);
+                    }),
+                Action::make('markAsInProgress')
+                    ->label('Mark as In Progress')
+                    ->icon('heroicon-o-arrow-right')
+                    ->color('info')
+                     ->requiresConfirmation()
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::PAYMENT_VALIDATED)
+                    ->action(function (CustomTransaction $record) {
+                        $record->update(['status' => CustomTransactionStatus::IN_PROGRESS]);
+                    }),
+                Action::make('markAsCompleted')
+                    ->label('Mark as Completed')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (CustomTransaction $record): bool => $record->status === CustomTransactionStatus::IN_PROGRESS)
+                    ->action(function (CustomTransaction $record) {
+                        $record->update(['status' => CustomTransactionStatus::COMPLETED]);
+                    }),
+                 Action::make('cancelOrder')
+                    ->label('Cancel Order')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->visible(fn (CustomTransaction $record): bool =>
+                        $record->status !== CustomTransactionStatus::COMPLETED &&
+                        $record->status !== CustomTransactionStatus::REJECTED &&
+                        $record->status !== CustomTransactionStatus::CANCELLED
+                    )
+                    ->action(function (CustomTransaction $record) {
+                        $record->update(['status' => CustomTransactionStatus::CANCELLED]);
+                    }),
+                Tables\Actions\EditAction::make(), // Keep edit action
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

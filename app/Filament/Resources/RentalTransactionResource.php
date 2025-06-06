@@ -73,9 +73,7 @@ class RentalTransactionResource extends Resource
                     ->required()
                     ->default(RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION) // Updated default status
                     ->disabled(), // Status should be changed via actions, not directly in form
-                Forms\Components\Toggle::make('is_paid')
-                    ->required()
-                    ->disabled(), // Disable is_paid toggle in the form
+                
             ]);
     }
 
@@ -113,18 +111,17 @@ class RentalTransactionResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge() // Display status as a badge
-                    ->color(fn (string $state): string => match ($state) {
-                        RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION->value => 'warning',
-                        RentalTransactionStatus::PAYMENT_VALIDATED->value => 'success',
-                        RentalTransactionStatus::PAYMENT_FAILED->value => 'danger',
-                        RentalTransactionStatus::IN_RENTAL->value => 'info',
-                        RentalTransactionStatus::COMPLETED->value => 'success',
-                        RentalTransactionStatus::REJECTED->value => 'danger',
-                        RentalTransactionStatus::CANCELLED->value => 'gray',
+                    ->color(fn (RentalTransactionStatus $state): string => match ($state) {
+                        RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION => 'warning',
+                        RentalTransactionStatus::PAYMENT_VALIDATED => 'success',
+                        RentalTransactionStatus::PAYMENT_FAILED => 'danger',
+                        RentalTransactionStatus::IN_RENTAL => 'info',
+                        RentalTransactionStatus::COMPLETED => 'success',
+                        RentalTransactionStatus::REJECTED => 'danger',
+                        RentalTransactionStatus::CANCELLED => 'gray',
                     })
                     ->searchable(),
-                Tables\Columns\IconColumn::make('is_paid')
-                    ->boolean(),
+                
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -146,7 +143,7 @@ class RentalTransactionResource extends Resource
                         ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION || $record->status === RentalTransactionStatus::PAYMENT_FAILED)
                         ->action(function (RentalTransaction $record) {
                             $record->status = RentalTransactionStatus::PAYMENT_VALIDATED;
-                            $record->is_paid = true;
+                            
                             $record->save();
                         }),
                     Action::make('invalidate_payment')
@@ -160,7 +157,7 @@ class RentalTransactionResource extends Resource
                         )
                         ->action(function (RentalTransaction $record) {
                             $record->status = RentalTransactionStatus::PAYMENT_FAILED;
-                            $record->is_paid = false;
+                            
                             $record->save();
                         }),
                     Action::make('mark_as_picked_up')
@@ -183,7 +180,7 @@ class RentalTransactionResource extends Resource
                         }),
                     Action::make('cancel_booking')
                         ->label('Cancel Booking')
-                        ->icon('heroicon-o-slash-circle')
+                        ->icon('heroicon-o-no-symbol')
                         ->color('gray')
                         ->visible(fn (RentalTransaction $record): bool =>
                             $record->status !== RentalTransactionStatus::COMPLETED &&
