@@ -7,7 +7,6 @@
 <i class="bi bi-arrow-left fs-4"></i>
 </a>
 <p class="h5 mb-0 fw-semibold">Custom Kebaya Order</p>
-{{-- Dark/Light Mode Toggle Button --}}
 <button id="theme-toggle" class="btn p-0">
 <i class="bi bi-moon fs-4"></i>
 </button>
@@ -25,7 +24,7 @@
 </div>
 <div class="d-flex flex-column gap-2">
 <label for="phone_number" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</label>
-<input type="tel" name="phone_number"1 id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', Auth::user()->phone_number ?? '') }}" required>
+<input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', Auth::user()->phone_number ?? '') }}" required>
 </div>
 <div class="d-flex flex-column gap-2">
 <label class="form-label fw-semibold mb-0 d-flex align-items-center gap-2">
@@ -45,7 +44,7 @@
 </div>
 <div class="d-flex flex-column gap-2">
 <label for="size_chart_option" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-rulers"></i> Choose Size</label>
-<select name="size_chart_option" id="size_chart_option" class="form-select" required>2
+<select name="size_chart_option" id="size_chart_option" class="form-select" required>
 <option value="">Select Size</option>
 <option value="S">S</option>
 <option value="M">M</option>

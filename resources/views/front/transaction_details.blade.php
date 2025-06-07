@@ -1,267 +1,265 @@
 @extends('front.layouts.app')
 @section('title', 'Booking Details')
 @section('content')
+
 <main class="main-content-container py-4">
-    <div id="Top-navbar" class="d-flex justify-content-between align-items-center mb-4 px-3">
-        <a href="{{ route('front.transactions') }}">
-            <i class="bi bi-arrow-left fs-4"></i>
-        </a>
-        <p class="h5 mb-0 fw-semibold">Booking Details</p>
-        {{-- Dark/Light Mode Toggle Button --}}
-        <button id="theme-toggle" class="btn p-0">
-            <i class="bi bi-moon fs-4"></i>
-        </button>
-    </div>
-    <section class="d-flex flex-column gap-4 px-3">
-        @if (session('success'))
-            <div class="alert alert-success" role="alert">
-                {{ session('success') }}
-            </div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger" role="alert">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-        <div class="card p-4 d-flex flex-row align-items-center gap-3">
-            <div class="flex-shrink-0 rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                <i class="bi bi-card-heading text-white fs-4"></i>
-            </div>
-            <div class="flex-grow-1 d-flex flex-column">
-                <p class="fw-semibold mb-0">{{ $details->trx_id }}</p>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Lindungi ID pesanan Anda</p>
+<div id="Top-navbar" class="d-flex justify-content-between align-items-center mb-4 px-3">
+<a href="{{ route('front.transactions') }}">
+<i class="bi bi-arrow-left fs-4"></i>
+</a>
+<p class="h5 mb-0 fw-semibold">Booking Details</p>
+<button id="theme-toggle" class="btn p-0">
+<i class="bi bi-moon fs-4"></i>
+</button>
+</div>
+<section class="d-flex flex-column gap-4 px-3">
+@if (session('success'))
+<div class="alert alert-success" role="alert">
+{{ session('success') }}
+</div>
+@endif
+@if ($errors->any())
+<div class="alert alert-danger" role="alert">
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<div class="card p-4 d-flex flex-row align-items-center gap-3">
+<div class="flex-shrink-0 rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+<i class="bi bi-card-heading text-white fs-4"></i>
+</div>
+<div class="flex-grow-1 d-flex flex-column">
+<p class="fw-semibold mb-0">{{ $details->trx_id }}</p>
+<p class="text-muted mb-0" style="font-size: 0.9rem;">Lindungi ID pesanan Anda</p>
+</div>
+</div>
+
+    @if ($details->status !== \App\Enums\RentalTransactionStatus::REJECTED && $details->status !== \App\Enums\RentalTransactionStatus::CANCELLED && $details->status !== \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)
+        <div class="card p-3">
+            <p class="fw-semibold mb-2">Progress Pemesanan</p>
+            <div class="d-flex align-items-start position-relative" style="width: 100%; padding: 10px 0;">
+                @php
+                    $statuses = [
+                        \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
+                        \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED,
+                        \App\Enums\RentalTransactionStatus::IN_RENTAL,
+                        \App\Enums\RentalTransactionStatus::COMPLETED,
+                    ];
+                    $statusLabels = [
+                        \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION->value => 'Menunggu<br>Verifikasi',
+                        \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED->value => 'Pembayaran<br>Terverifikasi',
+                        \App\Enums\RentalTransactionStatus::IN_RENTAL->value => 'Dalam<br>Penyewaan',
+                        \App\Enums\RentalTransactionStatus::COMPLETED->value => 'Selesai'
+                    ];
+
+                    $currentStatusIndex = match ($details->status) {
+                        \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION => 0,
+                        \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED => 1,
+                        \App\Enums\RentalTransactionStatus::IN_RENTAL => 2,
+                        \App\Enums\RentalTransactionStatus::COMPLETED => 3,
+                        default => 0,
+                    };
+                @endphp
+
+                @foreach ($statuses as $index => $status)
+                    <div class="d-flex flex-column align-items-center" style="flex: 1;">
+                        <div class="rounded-circle mb-1
+                            @if ($currentStatusIndex >= $index) bg-primary text-white
+                            @else bg-secondary text-dark
+                            @endif"
+                            style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;">
+                            {{ $index + 1 }}
+                        </div>
+                        <p class="text-center" style="font-size: 0.85rem; margin-top: 5px;">
+                            {!! $statusLabels[$status->value] ?? $status->getLabel() !!}
+                        </p>
+                    </div>
+
+                    @if ($index < count($statuses) - 1)
+                        <div class="flex-grow-1 bg-secondary mt-3" style="height: 5px;"></div>
+                    @endif
+                @endforeach
             </div>
         </div>
+    @endif
 
-        @if ($details->status !== \App\Enums\RentalTransactionStatus::REJECTED && $details->status !== \App\Enums\RentalTransactionStatus::CANCELLED && $details->status !== \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)
-            <div class="card p-3">
-                <p class="fw-semibold mb-2">Progress Pemesanan</p>
-                <div class="d-flex align-items-start position-relative" style="width: 100%; padding: 10px 0;">
-                    @php
-                        $statuses = [
-                            \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
-                            \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED,
-                            \App\Enums\RentalTransactionStatus::IN_RENTAL,
-                            \App\Enums\RentalTransactionStatus::COMPLETED,
-                        ];
-                        $statusLabels = [
-                            \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION->value => 'Menunggu<br>Verifikasi',
-                            \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED->value => 'Pembayaran<br>Terverifikasi',
-                            \App\Enums\RentalTransactionStatus::IN_RENTAL->value => 'Dalam<br>Penyewaan',
-                            \App\Enums\RentalTransactionStatus::COMPLETED->value => 'Selesai'
-                        ];
+    @php
+        $statusText = '';
+        $statusIcon = '';
+        $statusClass = '';
+        $additionalMessage = '';
+    @endphp
 
-                        $currentStatusIndex = match ($details->status) {
-                            \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION => 0,
-                            \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED => 1,
-                            \App\Enums\RentalTransactionStatus::IN_RENTAL => 2,
-                            \App\Enums\RentalTransactionStatus::COMPLETED => 3,
-                            default => 0,
-                        };
-                    @endphp
-
-                    @foreach ($statuses as $index => $status)
-                        <div class="d-flex flex-column align-items-center" style="flex: 1;">
-                            <div class="rounded-circle mb-1
-                                @if ($currentStatusIndex >= $index) bg-primary text-white
-                                @else bg-secondary text-dark
-                                @endif"
-                                style="width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;">
-                                {{ $index + 1 }}
-                            </div>
-                            <p class="text-center" style="font-size: 0.85rem; margin-top: 5px;">
-                                {!! $statusLabels[$status->value] ?? $status->getLabel() !!}
-                            </p>
-                        </div>
-
-                        @if ($index < count($statuses) - 1)
-                            <div class="flex-grow-1 bg-secondary mt-3" style="height: 5px;"></div>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-        @endif
-
-        {{-- Dynamic Status Messages and Actions --}}
+    <div class="card p-3 d-flex flex-row align-items-center gap-3
         @php
-            $statusText = '';
-            $statusIcon = '';
-            $statusClass = '';
-            $additionalMessage = '';
+            switch ($details->status) {
+                case \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION:
+                    echo 'bg-warning text-dark';
+                    $statusText = 'Menunggu Verifikasi Pembayaran';
+                    $statusIcon = 'bi-hourglass-split';
+                    $additionalMessage = 'Pembayaran Anda sedang dalam proses verifikasi oleh tim kami. Mohon tunggu konfirmasi.';
+                    break;
+                case \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED:
+                    echo 'bg-success text-white';
+                    $statusText = 'Pembayaran Terverifikasi';
+                    $statusIcon = 'bi-check-circle';
+                    $additionalMessage = 'Pembayaran Anda sudah kami terima. Kebaya sewaan siap diambil pada tanggal ' . $details->started_at->format('d M Y') . ' di alamat yang tertera <a href="' . route('front.contact') . '" class="text-white text-decoration-underline">di sini</a>.';
+                    break;
+                case \App\Enums\RentalTransactionStatus::PAYMENT_FAILED:
+                    echo 'bg-danger text-white';
+                    $statusText = 'Pembayaran Gagal/Tidak Valid';
+                    $statusIcon = 'bi-x-circle';
+                    $additionalMessage = 'Bukti pembayaran Anda tidak valid atau pembayaran gagal. Mohon unggah ulang bukti pembayaran yang benar atau hubungi layanan pelanggan.';
+                    break;
+                case \App\Enums\RentalTransactionStatus::IN_RENTAL:
+                    echo 'bg-secondary text-white';
+                    $statusText = 'Dalam Penyewaan';
+                    $statusIcon = 'bi-person-gear';
+                    $additionalMessage = 'Kebaya sedang dalam masa penyewaan Anda. Mohon dikembalikan pada tanggal ' . $details->ended_at->format('d M Y') . '.';
+                    break;
+                case \App\Enums\RentalTransactionStatus::COMPLETED:
+                    echo 'bg-success text-white';
+                    $statusText = 'Penyewaan Selesai';
+                    $statusIcon = 'bi-check-all';
+                    $additionalMessage = 'Penyewaan kebaya telah selesai. Terima kasih telah menggunakan layanan kami.';
+                    break;
+                case \App\Enums\RentalTransactionStatus::REJECTED:
+                    echo 'bg-danger text-white';
+                    $statusText = 'Pesanan Ditolak';
+                    $statusIcon = 'bi-x-circle';
+                    $additionalMessage = 'Maaf, pesanan Anda telah ditolak. Silakan hubungi layanan pelanggan untuk informasi lebih lanjut.';
+                    break;
+                case \App\Enums\RentalTransactionStatus::CANCELLED:
+                    echo 'bg-secondary text-white';
+                    $statusText = 'Pesanan Dibatalkan';
+                    $statusIcon = 'bi-slash-circle';
+                    $additionalMessage = 'Pesanan Anda telah dibatalkan. Jika ini adalah kesalahan, mohon hubungi layanan pelanggan.';
+                    break;
+            }
         @endphp
-
-        <div class="card p-3 d-flex flex-row align-items-center gap-3
-            @php
-                switch ($details->status) {
-                    case \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION:
-                        echo 'bg-warning text-dark';
-                        $statusText = 'Menunggu Verifikasi Pembayaran';
-                        $statusIcon = 'bi-hourglass-split';
-                        $additionalMessage = 'Pembayaran Anda sedang dalam proses verifikasi oleh tim kami. Mohon tunggu konfirmasi.';
-                        break;
-                    case \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED:
-                        echo 'bg-success text-white';
-                        $statusText = 'Pembayaran Terverifikasi';
-                        $statusIcon = 'bi-check-circle';
-                        $additionalMessage = 'Pembayaran Anda sudah kami terima. Kebaya sewaan siap diambil pada tanggal ' . $details->started_at->format('d M Y') . ' di alamat yang tertera <a href="' . route('front.contact') . '" class="text-white text-decoration-underline">di sini</a>.';
-                        break;
-                    case \App\Enums\RentalTransactionStatus::PAYMENT_FAILED:
-                        echo 'bg-danger text-white';
-                        $statusText = 'Pembayaran Gagal/Tidak Valid';
-                        $statusIcon = 'bi-x-circle';
-                        $additionalMessage = 'Bukti pembayaran Anda tidak valid atau pembayaran gagal. Mohon unggah ulang bukti pembayaran yang benar atau hubungi layanan pelanggan.';
-                        break;
-                    case \App\Enums\RentalTransactionStatus::IN_RENTAL:
-                        echo 'bg-secondary text-white';
-                        $statusText = 'Dalam Penyewaan';
-                        $statusIcon = 'bi-person-gear';
-                        $additionalMessage = 'Kebaya sedang dalam masa penyewaan Anda. Mohon dikembalikan pada tanggal ' . $details->ended_at->format('d M Y') . '.';
-                        break;
-                    case \App\Enums\RentalTransactionStatus::COMPLETED:
-                        echo 'bg-success text-white';
-                        $statusText = 'Penyewaan Selesai';
-                        $statusIcon = 'bi-check-all';
-                        $additionalMessage = 'Penyewaan kebaya telah selesai. Terima kasih telah menggunakan layanan kami.';
-                        break;
-                    case \App\Enums\RentalTransactionStatus::REJECTED:
-                        echo 'bg-danger text-white';
-                        $statusText = 'Pesanan Ditolak';
-                        $statusIcon = 'bi-x-circle';
-                        $additionalMessage = 'Maaf, pesanan Anda telah ditolak. Silakan hubungi layanan pelanggan untuk informasi lebih lanjut.';
-                        break;
-                    case \App\Enums\RentalTransactionStatus::CANCELLED:
-                        echo 'bg-secondary text-white';
-                        $statusText = 'Pesanan Dibatalkan';
-                        $statusIcon = 'bi-slash-circle';
-                        $additionalMessage = 'Pesanan Anda telah dibatalkan. Jika ini adalah kesalahan, mohon hubungi layanan pelanggan.';
-                        break;
-                }
-            @endphp
-        ">
-            <div class="flex-shrink-0">
-                <i class="bi {{ $statusIcon }} fs-4"></i>
-            </div>
-            <div class="flex-grow-1 d-flex flex-column gap-1">
-                <div class="d-flex align-items-center gap-1">
-                    <p class="fw-semibold mb-0" style="font-size: 0.9rem;">{{ $statusText }}</p>
-                    @if (in_array($details->status, [\App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED, \App\Enums\RentalTransactionStatus::COMPLETED]))
-                        <i class="bi bi-patch-check-fill"></i>
-                    @endif
-                </div>
-                <p class="mb-0" style="font-size: 0.8rem;">{!! $additionalMessage !!}</p>
-
-                @if ($details->status === \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)
-                    <div class="d-flex flex-column gap-2 mt-3">
-                        <form action="{{ route('front.checkout.store') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            <input type="hidden" name="transaction_id" value="{{ $details->trx_id }}">
-                            <input type="hidden" name="payment_method" value="{{ $details->payment_method }}"> {{-- Preserve original payment method --}}
-                            <div class="mb-2">
-                                <label for="payment_proof" class="form-label text-white fw-semibold">Unggah Ulang Bukti Pembayaran:</label>
-                                <input class="form-control form-control-sm" type="file" id="payment_proof" name="payment_proof" required>
-                                @error('payment_proof')
-                                    <div class="text-danger" style="font-size: 0.8rem;">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="confirm_payment" id="confirm_payment" required>
-                                <label class="form-check-label text-white" for="confirm_payment">
-                                    Saya mengonfirmasi bahwa bukti pembayaran ini valid.
-                                </label>
-                                @error('confirm_payment')
-                                    <div class="text-danger" style="font-size: 0.8rem;">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <button type="submit" class="btn btn-light rounded-pill px-4 py-2 fw-bold w-100 mt-3">Unggah Ulang</button>
-                        </form>
-                        <form action="{{ route('front.rental.cancel', $details->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <button type="submit" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold w-100 mt-2">Batalkan Pesanan</button>
-                        </form>
-                    </div>
+    ">
+        <div class="flex-shrink-0">
+            <i class="bi {{ $statusIcon }} fs-4"></i>
+        </div>
+        <div class="flex-grow-1 d-flex flex-column gap-1">
+            <div class="d-flex align-items-center gap-1">
+                <p class="fw-semibold mb-0" style="font-size: 0.9rem;">{{ $statusText }}</p>
+                @if (in_array($details->status, [\App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED, \App\Enums\RentalTransactionStatus::COMPLETED]))
+                    <i class="bi bi-patch-check-fill"></i>
                 @endif
             </div>
-        </div>
+            <p class="mb-0" style="font-size: 0.8rem;">{!! $additionalMessage !!}</p>
 
-        <hr class="my-3">
-        <div class="d-flex align-items-center gap-3">
-            <div class="flex-shrink-0 rounded-2 overflow-hidden" style="width: 80px; height: 80px; background-color: #F6F6F6;">
-                <div class="d-flex justify-content-center align-items-center h-100 w-100">
-                    <img src="{{ Storage::url($details->product->thumbnail) }}" class="img-fluid" alt="thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
+            @if ($details->status === \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)
+                <div class="d-flex flex-column gap-2 mt-3">
+                    <form action="{{ route('front.checkout.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="transaction_id" value="{{ $details->trx_id }}">
+                        <input type="hidden" name="payment_method" value="{{ $details->payment_method }}">
+                        <div class="mb-2">
+                            <label for="payment_proof" class="form-label text-white fw-semibold">Unggah Ulang Bukti Pembayaran:</label>
+                            <input class="form-control form-control-sm" type="file" id="payment_proof" name="payment_proof" required>
+                            @error('payment_proof')
+                                <div class="text-danger" style="font-size: 0.8rem;">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="confirm_payment" id="confirm_payment" required>
+                            <label class="form-check-label text-white" for="confirm_payment">
+                                Saya mengonfirmasi bahwa bukti pembayaran ini valid.
+                            </label>
+                            @error('confirm_payment')
+                                <div class="text-danger" style="font-size: 0.8rem;">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <button type="submit" class="btn btn-light rounded-pill px-4 py-2 fw-bold w-100 mt-3">Unggah Ulang</button>
+                    </form>
+                    <form action="{{ route('front.rental.cancel', $details->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <button type="submit" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold w-100 mt-2">Batalkan Pesanan</button>
+                    </form>
                 </div>
-            </div>
-            <div class="flex-grow-1 d-flex flex-column gap-2">
-                <p class="fw-bold mb-0">{{ $details->product->name }}</p>
+            @endif
+        </div>
+    </div>
+
+    <hr class="my-3">
+    <div class="d-flex align-items-center gap-3 card p-3">
+        <div class="flex-shrink-0 rounded-2 overflow-hidden" style="width: 80px; height: 80px; background-color: #F6F6F6;">
+            <div class="d-flex justify-content-center align-items-center h-100 w-100">
+                <img src="{{ Storage::url($details->product->thumbnail) }}" class="img-fluid rounded-2" alt="thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
         </div>
+        <div class="flex-grow-1 d-flex flex-column gap-2">
+            <p class="fw-bold mb-0">{{ $details->product->name }}</p>
+        </div>
+    </div>
+    <section class="d-flex flex-column gap-4">
+        <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-person-circle"></i> Customer Information</h2>
+        <div class="card p-4 d-flex flex-column gap-3">
+            <div class="d-flex flex-column gap-2">
+                <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</p>
+                <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
+                    <i class="bi bi-person fs-5"></i>
+                    <p class="fw-semibold mb-0">{{ $details->name }}</p>
+                </div>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</p>
+                <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
+                    <i class="bi bi-telephone fs-5"></i>
+                    <p class="fw-semibold mb-0">{{ $details->phone_number }}</p>
+                </div>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Started At</p>
+                <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
+                    <i class="bi bi-calendar-event fs-5"></i>
+                    <p class="fw-semibold mb-0">{{ $details->started_at->format('d m Y') }}</p>
+                </div>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Ended At</p>
+                <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
+                    <i class="bi bi-calendar-event fs-5"></i>
+                    <p class="fw-semibold mb-0">{{ $details->ended_at->format('d m Y') }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <hr class="my-3">
+    <div id="Payment-details" class="d-flex flex-column gap-3 card p-3">
+        <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-credit-card"></i> Payment Details</h2>
+        <div class="d-flex flex-column gap-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="mb-0">Grand total</p>
+                <p class="fw-bold fs-5 mb-0 text-decoration-underline">Rp {{ Number::format($details->total_amount, locale: 'id') }}</p>
+            </div>
+        </div>
+    </div>
+
+    @if(in_array($details->status, [\App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED, \App\Enums\RentalTransactionStatus::IN_RENTAL]))
         <section class="d-flex flex-column gap-4">
-            <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-person-circle"></i> Customer Information</h2>
+            <h2 class="h6 mb-2 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2>
             <div class="card p-4 d-flex flex-column gap-3">
-                <div class="d-flex flex-column gap-2">
-                    <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-person"></i> Full Name</p>
-                    <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                        <i class="bi bi-person fs-5"></i>
-                        <p class="fw-semibold mb-0">{{ $details->name }}</p>
-                    </div>
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-telephone"></i> Phone Number</p>
-                    <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                        <i class="bi bi-telephone fs-5"></i>
-                        <p class="fw-semibold mb-0">{{ $details->phone_number }}</p>
-                    </div>
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Started At</p>
-                    <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                        <i class="bi bi-calendar-event fs-5"></i>
-                        <p class="fw-semibold mb-0">{{ $details->started_at->format('d m Y') }}</p>
-                    </div>
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    <p class="fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-event"></i> Ended At</p>
-                    <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-2">
-                        <i class="bi bi-calendar-event fs-5"></i>
-                        <p class="fw-semibold mb-0">{{ $details->ended_at->format('d m Y') }}</p>
-                    </div>
+                <div class="d-flex flex-column gap-1">
+                    <p class="fw-semibold mb-1 d-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i> Address:</p>
+                    <p class="mb-0 text-muted">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
                 </div>
             </div>
         </section>
-        <hr class="my-3">
-        <div id="Payment-details" class="d-flex flex-column gap-3">
-            <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-credit-card"></i> Payment Details</h2>
-            <div class="d-flex flex-column gap-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <p class="mb-0">Grand total</p>
-                    <p class="fw-bold fs-5 mb-0 text-decoration-underline">Rp {{ Number::format($details->total_amount, locale: 'id') }}</p>
-                </div>
-            </div>
-        </div>
-
-        {{-- Show Pickup Info if status is PAYMENT_VALIDATED or IN_RENTAL --}}
-        @if(in_array($details->status, [\App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED, \App\Enums\RentalTransactionStatus::IN_RENTAL])) {{-- Removed COMPLETED from this condition --}}
-            <section class="d-flex flex-column gap-4">
-                <h2 class="h6 mb-2 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-shop"></i> Pickup Information</h2>
-                <div class="card p-4 d-flex flex-column gap-3">
-                    <div class="d-flex flex-column gap-1">
-                        <p class="fw-semibold mb-1 d-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i> Address:</p>
-                        <p class="mb-0 text-muted">Jl. Puspowarno Ds. Tales Dsn. Cakruk Kec. Ngadiluwih Kab. Kediri</p>
-                    </div>
-                </div>
-            </section>
-        @endif
-    </section>
-    <div id="Bottom-nav" class="fixed-bottom bg-white border-top">
-        <div class="container main-content-container">
-            <div class="d-flex align-items-center justify-content-between p-3">
-                <a href="https://wa.me/6285183004324" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Hubungi Layanan Pelanggan</a>
-            </div>
+    @endif
+</section>
+<div id="Bottom-nav" class="fixed-bottom bg-white border-top">
+    <div class="container main-content-container">
+        <div class="d-flex align-items-center justify-content-between p-3">
+            <a href="[https://wa.me/6285183004324](https://wa.me/6285183004324)" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Hubungi Layanan Pelanggan</a>
         </div>
     </div>
+</div>
 </main>
 @endsection

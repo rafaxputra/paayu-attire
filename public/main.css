@@ -1,168 +1,178 @@
 body {
-    font-family: 'Poppins', sans-serif;
-    padding-bottom: 70px; /* Adjust based on bottom nav height */
+font-family: 'Poppins', sans-serif;
+padding-bottom: 70px;
 }
-
 :root {
-    --bs-primary: #FFD700; /* Gold/Yellow color */
-    --bs-primary-rgb: 255, 215, 0;
+--bs-primary: #FFD700;
+--bs-primary-rgb: 255, 215, 0;
+--bs-secondary-bg: #FFFACD;
+--bs-light-gold: #FFECB3;
+--bs-dark-gold: #DAA520;
 }
 .btn-primary {
-    --bs-btn-color: #000;
-    --bs-btn-bg: var(--bs-primary);
-    --bs-btn-border-color: var(--bs-primary);
-    --bs-btn-hover-color: #000;
-    --bs-btn-hover-bg: #e6c300;
-    --bs-btn-hover-border-color: #e6c300;
-    --bs-btn-focus-shadow-rgb: 255, 215, 0;
-    --bs-btn-active-color: #000;
-    --bs-btn-active-bg: #ccb000;
-    --bs-btn-active-border-color: #ccb000;
-    --bs-btn-disabled-color: #000;
-    --bs-btn-disabled-bg: var(--bs-primary);
-    --bs-btn-disabled-border-color: var(--bs-primary);
+--bs-btn-color: #000;
+--bs-btn-bg: var(--bs-primary);
+--bs-btn-border-color: var(--bs-primary);
+--bs-btn-hover-color: #000;
+--bs-btn-hover-bg: #e6c300;
+--bs-btn-hover-border-color: #e6c300;
+--bs-btn-focus-shadow-rgb: 255, 215, 0;
+--bs-btn-active-color: #000;
+--bs-btn-active-bg: #ccb000;
+--bs-btn-active-border-color: #ccb000;
+--bs-btn-disabled-color: #000;
+--bs-btn-disabled-bg: var(--bs-primary);
+--bs-btn-disabled-border-color: var(--bs-primary);
 }
-
-/* Custom style for max width on main content */
 .main-content-container {
-    max-width: 640px;
-    margin-left: auto;
-    margin-right: auto;
+max-width: 640px;
+margin-left: auto;
+margin-right: auto;
 }
-
-/* Custom styles for modern look */
 .card {
-    border: none;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease-in-out;
+border: none;
+border-radius: 1rem;
+box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+transition: all 0.3s ease-in-out;
 }
 .card:hover {
-    transform: translateY(-5px);
+transform: translateY(-8px) scale(1.01);
+box-shadow: 0 12px 24px rgba(0,0,0,0.2);
 }
 .card-title {
-    font-weight: 600;
+font-weight: 700;
 }
 .badge {
-    font-weight: 400;
+font-weight: 500;
+letter-spacing: 0.5px;
 }
 .bottom-nav-icon {
-    font-size: 1.5rem; /* Adjust icon size */
+font-size: 1.6rem;
 }
-
-/* Custom style for bottom nav max width */
 #Bottom-nav .container {
-    max-width: 640px;
+max-width: 640px;
 }
-/* Adjust image size for better visibility in grid */
 #All-Kebaya .card-img-top {
-    height: 180px; /* Increased image height */
-    object-fit: cover; /* Changed to cover to fill space better */
+height: 200px;
+object-fit: cover;
+border-top-left-radius: 1rem;
+border-top-right-radius: 1rem;
 }
-
 .thumbnail-active-ring {
-    box-shadow: 0 0 0 3px var(--bs-primary);
+box-shadow: 0 0 0 4px var(--bs-primary), 0 0 0 7px rgba(255, 215, 0, 0.5);
 }
-
-/* Ensure text on success background is white in both modes */
 .card.bg-success {
-    color: #fff !important;
+color: #fff !important;
 }
-
-/* Dark Mode Styles */
-html[data-bs-theme="dark"] {
-    /* Adjust general text color in main content for dark mode */
-    .main-content-container {
-        color: #dee2e6; /* Light gray text */
-    }
-
-    /* Adjust text color for primary buttons in dark mode */
-    .btn-primary {
-        color: #495057 !important; /* White text */
-    }
-
-    /* Adjust text color for product cards */
-    .card-title,
-    .card-text {
-        color: #dee2e6 !important; /* Light gray text */
-    }
-
-    /* Adjust text color for theme toggle icon in dark mode */
-    #theme-toggle i {
-        color: #495057 !important; /* White color for icon in dark mode */
-    }
-
-    /* Adjust link color in main content for dark mode */
-    .main-content-container a {
-        color: #dee2e2; /* Light gray color for links */
-    }
-
-    /* Adjust product image container background in dark mode */
-    #All-Kebaya .card-img-top {
-        background-color: #343a40 !important; /* Darker background */
-    }
-
-    /* Adjust background color for thumbnail section on details page in dark mode */
-    #Thumbnail {
-        background-color: #343a40 !important; /* Darker background */
-    }
-
-    /* Adjust color for back button icon on details page in dark mode */
-    .main-content-container .bi-arrow-left {
-        color: #495057 !important; /* White color for back arrow icon */
-    }
-
-    /* Adjust bottom navbar colors */
-    #Bottom-nav {
-        background-color: #212529 !important; /* Dark background */
-        border-top-color: #343a40 !important; /* Darker border */
-    }
-
-    #Bottom-nav .nav-link {
-        color: #dee2e6 !important; /* Light gray text for links */
-    }
-
-    #Bottom-nav .nav-link.text-dark {
-         color: #495057 !important; /* White text for active/highlighted link */
-    }
-
-    /* Adjust text color for the order ID in custom success page in dark mode */
-    html[data-bs-theme="dark"] #SuccessOrder #orderId {
-        color: #495057 !important; /* White text for order ID */
-    }
-
-    /* Adjust background and text color for bg-light elements in dark mode */
-    .bg-light {
-        background-color: #495057 !important; /* Darker background for bg-light */
-        color: #dee2e6 !important; /* Light gray text */
-    }
-
-    /* Ensure text on warning/success backgrounds is visible in dark mode */
-    .card.bg-warning.text-dark {
-        color: #212529 !important; /* Keep dark text on warning background */
-    }
-
-    /* Removed conflicting rule */
-    /* .card.bg-success.text-white {
-        color: #495057 !important;
-    } */
-
-    /* Adjust colors for progress indicators in dark mode */
-    .card .rounded-circle.bg-primary {
-        background-color: var(--bs-primary) !important;
-        color: #000 !important; /* Black text on primary background */
-    }
-
-    .card .rounded-circle.bg-secondary {
-        background-color: #6c757d !important; /* Bootstrap secondary dark mode color */
-        color: #dee2e6 !important; /* Light gray text on secondary background */
-    }
-
-    .card .rounded-circle.bg-danger {
-        background-color: #dc3545 !important; /* Bootstrap danger dark mode color */
-        color: #fff !important; /* White text on danger background */
-    }
-
-    .card .text-center {
-        color: #dee2e6 !important; /* Light gray text for progress labels */
-    }
+.form-control,
+.form-select {
+border-radius: 0.75rem;
+border-color: var(--bs-dark-gold);
+}
+.form-control:focus,
+.form-select:focus {
+box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.25);
+border-color: var(--bs-primary);
+}
+.input-group-text {
+border-radius: 0.75rem 0 0 0.75rem;
+background-color: var(--bs-light-gold);
+color: #333;
+border-right: none;
+}
+.input-group .form-control {
+border-left: none;
+}
+html[data-bs-theme="dark"] .main-content-container {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .btn-primary {
+--bs-btn-color: #212529 !important;
+--bs-btn-bg: var(--bs-primary) !important;
+--bs-btn-border-color: var(--bs-primary) !important;
+--bs-btn-hover-color: #212529 !important;
+--bs-btn-hover-bg: #e6c300 !important;
+--bs-btn-hover-border-color: #e6c300 !important;
+--bs-btn-active-color: #212529 !important;
+--bs-btn-active-bg: #ccb000 !important;
+--bs-btn-active-border-color: #ccb000 !important;
+}
+html[data-bs-theme="dark"] .card {
+background-color: #343a40 !important;
+box-shadow: 0 8px 16px rgba(0,0,0,0.4) !important;
+}
+html[data-bs-theme="dark"] .card:hover {
+box-shadow: 0 12px 24px rgba(0,0,0,0.6) !important;
+}
+html[data-bs-theme="dark"] .card-title,
+html[data-bs-theme="dark"] .card-text {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] #theme-toggle i {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .main-content-container a {
+color: #b0c4de !important;
+}
+html[data-bs-theme="dark"] #All-Kebaya .card-img-top {
+background-color: #495057 !important;
+}
+html[data-bs-theme="dark"] #Thumbnail {
+background-color: #495057 !important;
+}
+html[data-bs-theme="dark"] .main-content-container .bi-arrow-left {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] #Bottom-nav {
+background-color: #212529 !important;
+border-top-color: #495057 !important;
+}
+html[data-bs-theme="dark"] #Bottom-nav .nav-link {
+color: #b0c4de !important;
+}
+html[data-bs-theme="dark"] #Bottom-nav .nav-link.text-dark {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] #SuccessOrder #orderId {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .bg-light {
+background-color: #495057 !important;
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .card.bg-warning.text-dark {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .card.bg-info.text-dark {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .card .rounded-circle.bg-primary {
+background-color: var(--bs-primary) !important;
+color: #212529 !important;
+}
+html[data-bs-theme="dark"] .card .rounded-circle.bg-secondary {
+background-color: #6c757d !important;
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .card .rounded-circle.bg-danger {
+background-color: #dc3545 !important;
+color: #fff !important;
+}
+html[data-bs-theme="dark"] .card .text-center {
+color: #e0e0e0 !important;
+}
+html[data-bs-theme="dark"] .form-control,
+html[data-bs-theme="dark"] .form-select {
+background-color: #343a40 !important;
+color: #e0e0e0 !important;
+border-color: #6c757d !important;
+}
+html[data-bs-theme="dark"] .form-control:focus,
+html[data-bs-theme="dark"] .form-select:focus {
+box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.4) !important;
+border-color: var(--bs-primary) !important;
+}
+html[data-bs-theme="dark"] .input-group-text {
+background-color: #495057 !important;
+color: #e0e0e0 !important;
 }

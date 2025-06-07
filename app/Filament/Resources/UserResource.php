@@ -33,7 +33,9 @@ class UserResource extends Resource
                     ->unique(ignoreRecord: true), // Ensure email is unique, ignore current record on edit
                 Forms\Components\TextInput::make('phone_number')
                     ->label('Phone Number')
-                    ->maxLength(255),
+                    ->numeric() // Restrict input to numbers
+                    ->maxLength(255)
+                    ->helperText('Hanya bisa diisi dengan nomor/angka.'), // Add helper text
                 Forms\Components\Select::make('role')
                     ->options([
                         'admin' => 'Admin',
