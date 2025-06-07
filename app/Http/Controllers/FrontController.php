@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Spatie\ImageOptimizer\OptimizerChainFactory;
+use Intervention\Image\Facades\Image;
 
 class FrontController extends Controller
 {
@@ -112,7 +112,7 @@ public function checkout_store(StorePaymentRequest $request)
     }
     $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
     $fullProofPath = Storage::disk('public')->path($proofPath);
-    OptimizerChainFactory::create()->optimize($fullProofPath);
+    Image::make($fullProofPath)->save($fullProofPath, 80); // Optimize image with Intervention Image
     $rentalTransaction->update([
         'payment_proof' => $proofPath,
         'payment_method' => $request->payment_method,
@@ -259,20 +259,20 @@ public function storeCustomOrder(Request $request)
 
     $image1Path = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
     $fullPath1 = Storage::disk('public')->path($image1Path);
-    OptimizerChainFactory::create()->optimize($fullPath1);
+    Image::make($fullPath1)->save($fullPath1, 80); // Optimize image with Intervention Image
     $validatedData['image_reference'] = $image1Path;
 
     if ($request->hasFile('image_reference_2')) {
         $image2Path = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
         $fullPath2 = Storage::disk('public')->path($image2Path);
-        OptimizerChainFactory::create()->optimize($fullPath2);
+        Image::make($fullPath2)->save($fullPath2, 80); // Optimize image with Intervention Image
         $validatedData['image_reference_2'] = $image2Path;
     }
 
     if ($request->hasFile('image_reference_3')) {
         $image3Path = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
         $fullPath3 = Storage::disk('public')->path($image3Path);
-        OptimizerChainFactory::create()->optimize($fullPath3);
+        Image::make($fullPath3)->save($fullPath3, 80); // Optimize image with Intervention Image
         $validatedData['image_reference_3'] = $image3Path;
     }
 
@@ -319,7 +319,7 @@ public function uploadCustomPaymentProof(Request $request, CustomTransaction $cu
         ->file('payment_proof')
         ->store('custom_payment_proofs', 'public');
     $fullProofPath = Storage::disk('public')->path($proofPath);
-    OptimizerChainFactory::create()->optimize($fullProofPath);
+    Image::make($fullProofPath)->save($fullProofPath, 80); // Optimize image with Intervention Image
     $customTransaction->update([
         'payment_proof' => $proofPath,
         'payment_method' => $request->payment_method,
@@ -414,7 +414,7 @@ public function storeComment(Request $request)
     if ($request->hasFile('image')) {
         $imagePath = $request->file('image')->store('comment_images', 'public');
         $fullImagePath = Storage::disk('public')->path($imagePath);
-        OptimizerChainFactory::create()->optimize($fullImagePath);
+        Image::make($fullImagePath)->save($fullImagePath, 80); // Optimize image with Intervention Image
     }
     Comment::create([
         'user_id' => Auth::id(),
