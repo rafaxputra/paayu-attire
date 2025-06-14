@@ -37,7 +37,7 @@ enum CustomTransactionStatus: string implements HasLabel, HasColor
             self::PENDING => Color::Amber,
             self::REJECTED => Color::Red,
             self::PENDING_PAYMENT_VERIFICATION => Color::Blue,
-            self::PAYMENT_FAILED => Color::Danger,
+            self::PAYMENT_FAILED => Color::Red,
             self::PAYMENT_VALIDATED => Color::Green,
             self::IN_PROGRESS => Color::Yellow,
             self::COMPLETED => Color::Green,
