@@ -43,6 +43,7 @@
             <div class="card p-3">
                 <p class="fw-semibold mb-3 text-center">Order Progress</p>
                 @php
+                    $progressStatus = $details->status === \App\Enums\RentalTransactionStatus::LATE_RETURNED ? \App\Enums\RentalTransactionStatus::IN_RENTAL : $details->status;
                     $statuses = [
                         \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
                         \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED,
@@ -55,7 +56,7 @@
                         \App\Enums\RentalTransactionStatus::IN_RENTAL->value => 'Rented',
                         \App\Enums\RentalTransactionStatus::COMPLETED->value => 'Completed'
                     ];
-                    $currentStatusIndex = array_search($details->status, $statuses);
+                    $currentStatusIndex = array_search($progressStatus, $statuses);
                 @endphp
                 <div class="progress-stepper">
                     @foreach ($statuses as $index => $status)
@@ -69,7 +70,18 @@
         @endif
 
         @php
-            // Status Card Logic
+            $lateInfo = $details->late_info;
+        @endphp
+        @if($details->status === \App\Enums\RentalTransactionStatus::LATE_RETURNED && $lateInfo && $lateInfo['late_days'] > 0 && $lateInfo['late_fee'] > 0)
+        <div class="card status-card p-3 d-flex flex-row align-items-center gap-3 bg-danger mb-3">
+            <div class="flex-shrink-0"><i class="bi bi-exclamation-triangle fs-4"></i></div>
+            <div class="flex-grow-1 d-flex flex-column gap-1">
+                <p class="fw-semibold mb-0">Denda Keterlambatan</p>
+                <p class="mb-0 small">Anda terlambat mengembalikan barang selama <b>{{ $lateInfo['late_days'] }}</b> hari.<br>Total denda yang harus dibayar: <b>Rp {{ number_format($lateInfo['late_fee'], 0, ',', '.') }}</b>.<br>Silakan bayar denda ini saat mengembalikan barang sewaan.</p>
+            </div>
+        </div>
+        @endif
+        @php
             $statusInfo = match ($details->status) {
                 \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION => ['text' => 'Menunggu Verifikasi Pembayaran', 'icon' => 'bi-hourglass-split', 'class' => 'bg-warning'],
                 \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED => ['text' => 'Pembayaran Terverifikasi', 'icon' => 'bi-check-circle', 'class' => 'bg-success'],
@@ -78,6 +90,8 @@
                 \App\Enums\RentalTransactionStatus::COMPLETED => ['text' => 'Penyewaan Selesai', 'icon' => 'bi-check-all', 'class' => 'bg-success'],
                 \App\Enums\RentalTransactionStatus::REJECTED => ['text' => 'Pesanan Ditolak', 'icon' => 'bi-x-circle', 'class' => 'bg-danger'],
                 \App\Enums\RentalTransactionStatus::CANCELLED => ['text' => 'Pesanan Dibatalkan', 'icon' => 'bi-slash-circle', 'class' => 'bg-secondary'],
+                \App\Enums\RentalTransactionStatus::LATE_RETURNED => ['text' => '', 'icon' => '', 'class' => ''],
+                \App\Enums\RentalTransactionStatus::READY_FOR_PICKUP => ['text' => 'Siap Diambil', 'icon' => 'bi-box-seam', 'class' => 'bg-primary'],
             };
             $additionalMessage = match ($details->status) {
                 \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION => 'Pembayaran Anda sedang dalam proses verifikasi oleh tim kami. Mohon tunggu konfirmasi.',
@@ -87,9 +101,11 @@
                 \App\Enums\RentalTransactionStatus::COMPLETED => 'Penyewaan kebaya telah selesai. Terima kasih telah menggunakan layanan kami.',
                 \App\Enums\RentalTransactionStatus::REJECTED => 'Maaf, pesanan Anda telah ditolak. Silakan hubungi layanan pelanggan untuk informasi lebih lanjut.',
                 \App\Enums\RentalTransactionStatus::CANCELLED => 'Pesanan Anda telah dibatalkan. Jika ini adalah kesalahan, mohon hubungi layanan pelanggan.',
+                \App\Enums\RentalTransactionStatus::LATE_RETURNED => '',
+                \App\Enums\RentalTransactionStatus::READY_FOR_PICKUP => 'Barang siap diambil. Silakan datang ke lokasi dan bawa kartu identitas sebagai jaminan.',
             };
         @endphp
-
+        @if($details->status !== \App\Enums\RentalTransactionStatus::LATE_RETURNED && $details->status !== \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)
         <div class="card status-card p-3 d-flex flex-row align-items-center gap-3 {{ $statusInfo['class'] }}">
             <div class="flex-shrink-0"><i class="bi {{ $statusInfo['icon'] }} fs-4"></i></div>
             <div class="flex-grow-1 d-flex flex-column gap-1">
@@ -97,7 +113,58 @@
                 <p class="mb-0 small">{!! $additionalMessage !!}</p>
             </div>
         </div>
-        
+        @endif
+
+        @if ($details->status === \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)
+            <div class="card status-card p-3 d-flex flex-column gap-3 {{ $statusInfo['class'] }}">
+                <div class="d-flex flex-row align-items-center gap-3">
+                    <div class="flex-shrink-0"><i class="bi {{ $statusInfo['icon'] }} fs-4"></i></div>
+                    <div class="flex-grow-1 d-flex flex-column gap-1">
+                        <p class="fw-semibold mb-0">{{ $statusInfo['text'] }}</p>
+                        <p class="mb-0 small">{!! $additionalMessage !!}</p>
+                    </div>
+                </div>
+                <hr class="my-2 border-white opacity-25">
+                <form action="{{ route('front.checkout.store') }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+                    @csrf
+                    <input type="hidden" name="product_slug" value="{{ $details->product->slug }}">
+                    <input type="hidden" name="duration" value="{{ $details->duration }}">
+                    <input type="hidden" name="started_at" value="{{ $details->started_at->toDateString() }}">
+                    <input type="hidden" name="ended_at" value="{{ $details->ended_at->toDateString() }}">
+                    <input type="hidden" name="name" value="{{ $details->name }}">
+                    <input type="hidden" name="phone_number" value="{{ $details->phone_number }}">
+                    <input type="hidden" name="selected_size" value="{{ $details->selected_size }}">
+                    <div class="d-flex flex-column gap-2">
+                        <label for="payment_method" class="form-label mb-0">Pilih Bank</label>
+                        <select name="payment_method" id="payment_method" class="form-select" required>
+                            <option value="">Pilih Bank</option>
+                            <option value="BCA">BCA</option>
+                            <option value="BRI">BRI</option>
+                        </select>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <label for="payment_proof" class="form-label mb-0">Unggah Bukti</label>
+                        <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept=".jpg,.png" required>
+                        <small class="form-text text-muted">Format yang diterima: JPG, PNG</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="confirm_payment" id="confirm_payment" required>
+                        <label class="form-check-label" for="confirm_payment">
+                            Saya benar telah transfer
+                        </label>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-light w-100">Unggah Ulang & Kirim Ulang Pembayaran</button>
+                        <form action="{{ route('front.rental.cancel', $details->id) }}" method="POST" class="w-100">
+                            @csrf
+                            @method('PUT')
+                            <button type="submit" class="btn btn-outline-light w-100">Batalkan Pesanan</button>
+                        </form>
+                    </div>
+                </form>
+            </div>
+        @endif
+
         <div class="card p-3">
             <div class="d-flex align-items-center gap-3">
                 <div class="flex-shrink-0 rounded-2 overflow-hidden" style="width: 80px; height: 80px;">
@@ -127,36 +194,6 @@
                 <p class="fw-bold fs-5 mb-0 text-decoration-underline">Rp {{ Number::format($details->total_amount, locale: 'id') }}</p>
             </div>
         </div>
-
-        @php
-            $lateDays = $details->late_days;
-            $lateFee = $details->late_fee;
-            if ($details->status === 'late_returned') {
-                if ($lateDays === null) {
-                    $lateDays = now()->diffInDays($details->ended_at);
-                }
-                if ($lateFee === null && $lateDays > 0) {
-                    $lateFee = $lateDays * ($details->total_amount * 0.2);
-                }
-            }
-        @endphp
-        @if($details->status === 'late_returned' && $lateDays > 0 && $lateFee > 0)
-        <div class="card status-card p-3 d-flex flex-row align-items-center gap-3 bg-danger">
-            <div class="flex-shrink-0"><i class="bi bi-exclamation-triangle fs-4"></i></div>
-            <div class="flex-grow-1 d-flex flex-column gap-1">
-                <p class="fw-semibold mb-0">Denda Keterlambatan</p>
-                <p class="mb-0 small">Anda terlambat mengembalikan barang selama <b>{{ $lateDays }}</b> hari.<br>Total denda yang harus dibayar: <b>Rp {{ number_format($lateFee, 0, ',', '.') }}</b>.<br>Silakan bayar denda ini saat mengembalikan barang sewaan.</p>
-            </div>
-        </div>
-        @elseif($details->status === 'completed')
-        <div class="card status-card p-3 d-flex flex-row align-items-center gap-3 bg-success">
-            <div class="flex-shrink-0"><i class="bi bi-check-all fs-4"></i></div>
-            <div class="flex-grow-1 d-flex flex-column gap-1">
-                <p class="fw-semibold mb-0">Penyewaan Selesai</p>
-                <p class="mb-0 small">Penyewaan kebaya telah selesai. Terima kasih telah menggunakan layanan kami.</p>
-            </div>
-        </div>
-        @endif
 
     </section>
 

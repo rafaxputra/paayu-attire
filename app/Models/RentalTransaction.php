@@ -45,4 +45,24 @@ class RentalTransaction extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function getLateInfoAttribute()
+    {
+        if ($this->status === \App\Enums\RentalTransactionStatus::LATE_RETURNED) {
+            $lateDays = $this->late_days;
+            if ($lateDays === null) {
+                $lateDays = now()->diffInDays($this->ended_at, false);
+                if ($lateDays < 0) $lateDays = 0;
+            }
+            $lateFee = $this->late_fee;
+            if ($lateFee === null && $lateDays > 0) {
+                $lateFee = $lateDays * ($this->total_amount * 0.2);
+            }
+            return [
+                'late_days' => $lateDays,
+                'late_fee' => $lateFee,
+            ];
+        }
+        return null;
+    }
 }

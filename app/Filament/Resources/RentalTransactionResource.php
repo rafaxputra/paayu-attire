@@ -88,12 +88,14 @@ class RentalTransactionResource extends Resource
                 Forms\Components\TextInput::make('late_days')
                     ->numeric()
                     ->label('Terlambat (hari)')
-                    ->nullable(),
+                    ->nullable()
+                    ->helperText('Jika status late_returned, sistem otomatis menghitung denda berdasarkan hari ini dan ended_at. Bisa diubah manual.'),
                 Forms\Components\TextInput::make('late_fee')
                     ->numeric()
                     ->prefix('IDR')
                     ->label('Total Denda')
-                    ->nullable(),
+                    ->nullable()
+                    ->helperText('Denda dihitung otomatis: 20% x total_amount x late_days. Bisa diubah manual.'),
             ]);
     }
 
@@ -203,7 +205,7 @@ class RentalTransactionResource extends Resource
                         ->label('Mark as Completed')
                         ->icon('heroicon-o-check-badge')
                         ->color('success')
-                        ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::IN_RENTAL)
+                        ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::IN_RENTAL || $record->status === RentalTransactionStatus::LATE_RETURNED)
                         ->action(function (RentalTransaction $record) {
                             $record->status = RentalTransactionStatus::COMPLETED;
                             $record->save();
@@ -230,6 +232,25 @@ class RentalTransactionResource extends Resource
                         )
                         ->action(function (RentalTransaction $record) {
                             $record->status = RentalTransactionStatus::REJECTED;
+                            $record->save();
+                        }),
+                    Action::make('mark_as_late_returned')
+                        ->label('Mark as Late Returned')
+                        ->icon('heroicon-o-clock')
+                        ->color('danger')
+                        ->visible(fn (RentalTransaction $record): bool => $record->status === RentalTransactionStatus::IN_RENTAL)
+                        ->form([
+                            Forms\Components\TextInput::make('late_days')
+                                ->label('Late Days')
+                                ->numeric()
+                                ->required(),
+                        ])
+                        ->action(function (RentalTransaction $record, array $data) {
+                            $lateDays = (int)($data['late_days'] ?? 0);
+                            $lateFee = $lateDays > 0 ? $record->total_amount * 0.2 * $lateDays : 0;
+                            $record->late_days = $lateDays;
+                            $record->late_fee = $lateFee;
+                            $record->status = RentalTransactionStatus::LATE_RETURNED;
                             $record->save();
                         }),
                 ])

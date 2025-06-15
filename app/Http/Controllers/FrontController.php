@@ -96,11 +96,34 @@ class FrontController extends Controller
     {
         $product = Product::where('slug', $request->product_slug)->firstOrFail();
         $selectedSize = $request->selected_size;
-        $productSize = $product->productSizes()->where('size', $selectedSize)->firstOrFail();
         $duration = (int) $request->duration;
         $startedDate = Carbon::parse($request->started_at);
         $endedDate = Carbon::parse($request->ended_at);
         $totalAmount = $product->price * $duration;
+
+        // Cek apakah ini re-upload payment proof untuk transaksi yang sudah ada (PAYMENT_FAILED)
+        $existing = RentalTransaction::where([
+            'product_id' => $product->id,
+            'name' => $request->name,
+            'phone_number' => $request->phone_number,
+            'selected_size' => $selectedSize,
+            'started_at' => $startedDate,
+            'ended_at' => $endedDate,
+        ])->where('status', \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)->first();
+
+        if ($existing) {
+            $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+            $fullProofPath = \Storage::disk('public')->path($proofPath);
+            \Intervention\Image\Facades\Image::make($fullProofPath)->save($fullProofPath, 80);
+            $existing->update([
+                'payment_proof' => $proofPath,
+                'payment_method' => $request->payment_method,
+                'status' => \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
+            ]);
+            return redirect()->route('front.success.booking', $existing->trx_id);
+        }
+
+        $productSize = $product->productSizes()->where('size', $selectedSize)->firstOrFail();
         if ($productSize->stock <= 0) {
             return back()->withErrors(['selected_size' => 'Selected size is out of stock.'])->withInput();
         }
@@ -120,7 +143,6 @@ class FrontController extends Controller
             ]);
             $productSize->decrement('stock');
         });
-        // Simpan bukti pembayaran
         $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
         $fullProofPath = \Storage::disk('public')->path($proofPath);
         \Intervention\Image\Facades\Image::make($fullProofPath)->save($fullProofPath, 80);
