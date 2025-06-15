@@ -69,11 +69,31 @@ class RentalTransactionResource extends Resource
                     ])
                     ->disabled(), // Payment method should not be editable after upload
                 Forms\Components\Select::make('status') // Changed to Select
-                    ->options(RentalTransactionStatus::class) // Use enum for options
-                    ->required()
-                    ->default(RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION) // Updated default status
-                    ->disabled(), // Status should be changed via actions, not directly in form
-                
+                    ->options([
+                        'pending_payment_verification' => 'Pending Payment Verification',
+                        'payment_validated' => 'Payment Validated',
+                        'payment_failed' => 'Payment Failed',
+                        'ready_for_pickup' => 'Ready for Pickup',
+                        'in_rental' => 'In Rental',
+                        'completed' => 'Completed',
+                        'late_returned' => 'Late Returned',
+                        'rejected' => 'Rejected',
+                        'cancelled' => 'Cancelled',
+                    ])
+                    ->required(),
+                Forms\Components\TextInput::make('selected_size')
+                    ->label('Selected Size')
+                    ->maxLength(10)
+                    ->disabled(),
+                Forms\Components\TextInput::make('late_days')
+                    ->numeric()
+                    ->label('Terlambat (hari)')
+                    ->nullable(),
+                Forms\Components\TextInput::make('late_fee')
+                    ->numeric()
+                    ->prefix('IDR')
+                    ->label('Total Denda')
+                    ->nullable(),
             ]);
     }
 
@@ -117,11 +137,21 @@ class RentalTransactionResource extends Resource
                         RentalTransactionStatus::PAYMENT_FAILED => 'danger',
                         RentalTransactionStatus::IN_RENTAL => 'info',
                         RentalTransactionStatus::COMPLETED => 'success',
+                        RentalTransactionStatus::LATE_RETURNED => 'danger', // Added late_returned status
                         RentalTransactionStatus::REJECTED => 'danger',
                         RentalTransactionStatus::CANCELLED => 'gray',
                     })
                     ->searchable(),
-                
+                Tables\Columns\TextColumn::make('selected_size')
+                    ->label('Selected Size')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('late_days')
+                    ->label('Terlambat (hari)')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('late_fee')
+                    ->label('Total Denda')
+                    ->money('IDR')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -60,63 +60,74 @@ class FrontController extends Controller
 
     public function booking_save(StoreBookingRequest $request, Product $product)
     {
-        $productSize = $product->productSizes()->findOrFail($request->product_size_id);
-        if ($productSize->stock <= 0) {
-            return back()->withErrors(['product_size_id' => 'Selected size is out of stock.'])->withInput();
-        }
-        $duration = (int) $request->duration;
-        $startedDate = Carbon::parse($request->started_at);
-        $endedDate = $startedDate->copy()->addDays($duration);
-        $totalAmount = $product->price * $duration;
-        $rentalTransaction = null;
-        DB::transaction(function () use ($request, $product, $productSize, $duration, $startedDate, $endedDate, $totalAmount, &$rentalTransaction) {
-            $rentalTransaction = RentalTransaction::create([
-                'trx_id' => 'RENTAL-' . Str::random(8),
-                'user_id' => Auth::id(),
-                'product_id' => $product->id,
-                'name' => $request->name,
-                'phone_number' => $request->phone_number,
-                'started_at' => $startedDate,
-                'ended_at' => $endedDate,
-                'total_amount' => $totalAmount,
-                'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
-            ]);
-            $productSize->decrement('stock');
-        });
+        // Ambil data booking dari request
+        $data = $request->only(['selected_size', 'duration', 'started_at', 'name', 'phone_number']);
+        // Redirect ke halaman checkout dengan data booking sebagai query string
         return redirect()->route('front.checkout', [
             'product' => $product->slug,
-            'transactionId' => $rentalTransaction->trx_id,
+            'selected_size' => $data['selected_size'],
+            'duration' => $data['duration'],
+            'started_at' => $data['started_at'],
+            'name' => $data['name'],
+            'phone_number' => $data['phone_number'],
         ]);
     }
 
     public function checkout(Product $product, Request $request)
     {
-        $transactionId = $request->query('transactionId');
-        $rentalTransaction = RentalTransaction::where('trx_id', $transactionId)
-            ->where('product_id', $product->id)
-            ->firstOrFail();
-        $subTotal = $rentalTransaction->product->price * $rentalTransaction->duration;
-        $grandTotal = $rentalTransaction->total_amount;
+        $selectedSize = $request->query('selected_size');
+        $duration = (int) $request->query('duration');
+        $startedAt = $request->query('started_at');
+        $name = $request->query('name');
+        $phoneNumber = $request->query('phone_number');
+        $productSize = $product->productSizes()->where('size', $selectedSize)->first();
+        $startedDate = $startedAt ? Carbon::parse($startedAt) : now();
+        $endedDate = $startedDate->copy()->addDays($duration);
+        $subTotal = $product->price * $duration;
+        $grandTotal = $subTotal;
         $bankAccounts = [
             'BCA' => '5545011970 a/n Niken Alfinanda Putri',
             'BRI' => '626801015467534 a/n Niken Alfinanda Putri',
         ];
-        return view('front.checkout', compact('product', 'rentalTransaction', 'subTotal', 'grandTotal', 'bankAccounts'));
+        return view('front.checkout', compact('product', 'selectedSize', 'duration', 'startedDate', 'endedDate', 'name', 'phoneNumber', 'subTotal', 'grandTotal', 'bankAccounts'));
     }
 
     public function checkout_store(StorePaymentRequest $request)
     {
-        $rentalTransaction = RentalTransaction::where('trx_id', $request->transaction_id)->firstOrFail();
-        if ($rentalTransaction->payment_proof) {
-            Storage::disk('public')->delete($rentalTransaction->payment_proof);
+        $product = Product::where('slug', $request->product_slug)->firstOrFail();
+        $selectedSize = $request->selected_size;
+        $productSize = $product->productSizes()->where('size', $selectedSize)->firstOrFail();
+        $duration = (int) $request->duration;
+        $startedDate = Carbon::parse($request->started_at);
+        $endedDate = Carbon::parse($request->ended_at);
+        $totalAmount = $product->price * $duration;
+        if ($productSize->stock <= 0) {
+            return back()->withErrors(['selected_size' => 'Selected size is out of stock.'])->withInput();
         }
+        $rentalTransaction = null;
+        \DB::transaction(function () use ($request, $product, $selectedSize, $duration, $startedDate, $endedDate, $totalAmount, &$rentalTransaction, $productSize) {
+            $rentalTransaction = \App\Models\RentalTransaction::create([
+                'trx_id' => 'RENTAL-' . \Str::random(8),
+                'user_id' => \Auth::id(),
+                'product_id' => $product->id,
+                'name' => $request->name,
+                'phone_number' => $request->phone_number,
+                'selected_size' => $selectedSize,
+                'started_at' => $startedDate,
+                'ended_at' => $endedDate,
+                'total_amount' => $totalAmount,
+                'status' => \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
+            ]);
+            $productSize->decrement('stock');
+        });
+        // Simpan bukti pembayaran
         $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
-        $fullProofPath = Storage::disk('public')->path($proofPath);
-        Image::make($fullProofPath)->save($fullProofPath, 80);  // Optimize image with Intervention Image
+        $fullProofPath = \Storage::disk('public')->path($proofPath);
+        \Intervention\Image\Facades\Image::make($fullProofPath)->save($fullProofPath, 80);
         $rentalTransaction->update([
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
-            'status' => RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
+            'status' => \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
         ]);
         return redirect()->route('front.success.booking', $rentalTransaction->trx_id);
     }

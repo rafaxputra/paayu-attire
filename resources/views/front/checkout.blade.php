@@ -33,7 +33,14 @@
             </ul>
         </div>
         @endif
-        <input type="hidden" name="transaction_id" value="{{ $rentalTransaction->trx_id }}">
+        {{-- <input type="hidden" name="transaction_id" value="{{ $rentalTransaction->trx_id }}"> --}}
+        <input type="hidden" name="product_slug" value="{{ $product->slug }}">
+        <input type="hidden" name="duration" value="{{ $duration }}">
+        <input type="hidden" name="started_at" value="{{ $startedDate->toDateString() }}">
+        <input type="hidden" name="ended_at" value="{{ $endedDate->toDateString() }}">
+        <input type="hidden" name="name" value="{{ $name }}">
+        <input type="hidden" name="phone_number" value="{{ $phoneNumber }}">
+        <input type="hidden" name="selected_size" value="{{ $selectedSize }}">
 
         <div class="checkout-timeline">
 
@@ -46,6 +53,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="fw-bold mb-0">{{ $product->name }}</p>
+                            <span class="badge bg-secondary mt-2">Ukuran yang dipilih: {{ $selectedSize }}</span>
                         </div>
                     </div>
                 </div>
@@ -58,11 +66,11 @@
                     <div class="d-flex flex-column gap-3">
                         <div class="d-flex flex-column gap-2">
                             <label for="name" class="form-label mb-0">Full Name</label>
-                            <input type="text" name="name" id="name" class="form-control" placeholder="Write your full name" value="{{ $rentalTransaction->name }}" required>
+                            <input type="text" name="name" id="name" class="form-control" placeholder="Write your full name" value="{{ $name }}" required>
                         </div>
                         <div class="d-flex flex-column gap-2">
                             <label for="phone_number" class="form-label mb-0">Phone Number</label>
-                            <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Write your phone number" value="{{ $rentalTransaction->phone_number }}" required>
+                            <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="Write your phone number" value="{{ $phoneNumber }}" required>
                         </div>
                     </div>
                 </div>
@@ -115,18 +123,33 @@
                                 I confirm that I have transferred the payment
                             </label>
                         </div>
+                        @php
+                            $penaltyPerDay = $grandTotal * 0.2;
+                        @endphp
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="confirm_penalty" id="confirm_penalty" required>
+                            <label class="form-check-label" for="confirm_penalty">
+                                I understand that if I do not return the item(s) by <b>{{ $endedDate ? $endedDate->format('d M Y') : '-' }}</b>, I will be charged a penalty of <b>Rp {{ number_format($penaltyPerDay, 0, ',', '.') }}</b> x number of late days.
+                            </label>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="confirm_identity" id="confirm_identity" required>
+                            <label class="form-check-label" for="confirm_identity">
+                                I understand that when picking up the item, I must leave one of my ID cards (KTP or other valid identification) as a guarantee.
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        @if($rentalTransaction->payment_proof)
+        {{-- @if($rentalTransaction->payment_proof)
             <div class="d-flex flex-column gap-2 px-3 mt-3">
                 <h2 class="h6 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-image"></i> Uploaded Payment Proof</h2>
                 <img src="{{ Storage::url($rentalTransaction->payment_proof) }}" alt="Payment Proof" class="img-fluid rounded-md" style="max-width: 100%; height: auto;">
             </div>
-        @endif
+        @endif --}}
 
         <button type="submit" class="btn btn-primary w-100 mt-2">Complete Checkout</button>
     </form>

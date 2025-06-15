@@ -47,7 +47,7 @@
 
                 <div class="d-flex flex-column gap-2">
                     <label for="phone_number" class="form-label fw-semibold mb-0">Phone Number</label>
-                    <input type="text" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', $user->phone_number) }}" pattern="\d*">
+                    <input type="text" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', $user->phone_number) }}" pattern="\d*" required>
                     <small class="form-text text-muted">Hanya bisa diisi dengan nomor/angka.</small>
                 </div>
 

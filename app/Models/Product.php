@@ -26,7 +26,6 @@ class Product extends Model
         'about',
         'material', // Added material
         'color', // Added color
-        'size_chart', // Added size_chart
         'price',
     ];
 

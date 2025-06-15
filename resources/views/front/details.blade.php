@@ -67,38 +67,27 @@
             </div>
         @endif
 
-        @if($product->size_chart)
+        @if(true)
             <div id="Size-Chart" class="d-flex flex-column gap-2">
                 <h2 class="h6 fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-list-ol"></i> Size Chart</h2>
                 <div class="card p-3">
-                    @php
-                        $lines = explode("\n", trim($product->size_chart));
-                        $header = explode('|', trim(array_shift($lines)));
-                    @endphp
                     <div class="table-responsive">
                         <table class="table table-bordered text-center">
                             <thead>
                                 <tr>
                                     <th class="align-middle">Size</th>
-                                    @foreach($header as $h)
-                                        <th scope="col" class="align-middle">{{ trim($h) }}</th>
-                                    @endforeach
+                                    <th class="align-middle">Lebar Bahu Belakang</th>
+                                    <th class="align-middle">Lingkar Panggul</th>
+                                    <th class="align-middle">Lingkar Pinggul</th>
+                                    <th class="align-middle">Lingkar Dada</th>
+                                    <th class="align-middle">Kerung Lengan</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($lines as $line)
-                                    @php
-                                        $parts = explode(':', trim($line), 2);
-                                        $sizeLabel = trim($parts[0] ?? '');
-                                        $measurements = explode('|', trim($parts[1] ?? ''));
-                                    @endphp
-                                    <tr>
-                                        <td class="align-middle">{{ $sizeLabel }}</td>
-                                        @foreach($measurements as $cell)
-                                            <td class="align-middle">{{ trim($cell) }}</td>
-                                        @endforeach
-                                    </tr>
-                                @endforeach
+                                <tr><td>S</td><td>36 cm</td><td>88 cm</td><td>66 cm</td><td>86 cm</td><td>42 cm</td></tr>
+                                <tr><td>M</td><td>38 cm</td><td>96 cm</td><td>72 cm</td><td>92 cm</td><td>44 cm</td></tr>
+                                <tr><td>L</td><td>39 cm</td><td>108 cm</td><td>78 cm</td><td>98 cm</td><td>48 cm</td></tr>
+                                <tr><td>XL</td><td>40 cm</td><td>112 cm</td><td>84 cm</td><td>104 cm</td><td>50 cm</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -130,7 +119,14 @@
                     <p class="fw-bold fs-5 mb-0">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                     <p class="mb-0" style="font-size: 0.9rem;">/day</p>
                 </div>
-                <a href="{{ route('front.booking', $product->slug) }}" class="btn btn-primary d-flex align-items-center gap-2"><i class="bi bi-cart-plus"></i> Rent Now</a>
+                @php
+                    $allOutOfStock = $product->productSizes->count() > 0 && $product->productSizes->every(fn($size) => $size->stock == 0);
+                @endphp
+                @if($allOutOfStock)
+                    <button class="btn btn-secondary d-flex align-items-center gap-2" disabled><i class="bi bi-cart-x"></i> Semua stok sedang habis</button>
+                @else
+                    <a href="{{ route('front.booking', $product->slug) }}" class="btn btn-primary d-flex align-items-center gap-2"><i class="bi bi-cart-plus"></i> Rent Now</a>
+                @endif
             </div>
         </div>
     </div>

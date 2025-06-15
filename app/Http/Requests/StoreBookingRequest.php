@@ -24,7 +24,7 @@ class StoreBookingRequest extends FormRequest
         return [
             'duration' => ['required', 'integer', 'min:1'],
             'started_at' => ['required', 'date', 'after_or_equal:today'],
-            'product_size_id' => ['required', 'exists:product_sizes,id'],
+            'selected_size' => ['required', 'string', 'max:10'],
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:255'],
         ];

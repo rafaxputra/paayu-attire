@@ -20,7 +20,6 @@ return new class extends Migration
             $table->unsignedBigInteger('price');
             $table->text('material')->nullable();
             $table->string('color')->nullable();
-            $table->text('size_chart')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

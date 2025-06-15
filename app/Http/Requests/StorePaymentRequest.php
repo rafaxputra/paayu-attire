@@ -22,7 +22,6 @@ class StorePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'transaction_id' => ['required', 'exists:rental_transactions,trx_id'],
             'payment_proof' => ['required', 'image', 'mimes:jpg,png'],
             'payment_method' => ['required', 'string', 'in:BCA,BRI'],
             'confirm_payment' => ['accepted'],

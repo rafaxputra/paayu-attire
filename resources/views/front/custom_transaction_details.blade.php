@@ -4,7 +4,7 @@
 @section('content')
 <main class="main-content-container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 px-3">
-        <a href="{{ route('front.transactions') }}">
+        <a href="{{ route('front.customer.dashboard') }}">
             <i class="bi bi-arrow-left fs-4"></i>
         </a>
         <p class="h5 mb-0 fw-semibold">Custom Order Details</p>

@@ -75,12 +75,12 @@
         </div>
 
         <div class="card p-3 d-flex flex-column gap-2">
-            <label for="product_size_id" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-arrows-fullscreen"></i> Select Size</label>
-            <select name="product_size_id" id="product_size_id" class="form-select" required>
-                <option value="">Select a size</option>
+            <label for="selected_size" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-arrows-fullscreen"></i> Pilih Size</label>
+            <select name="selected_size" id="selected_size" class="form-select" required>
+                <option value="">Pilih Size</option>
                 @foreach($product->productSizes as $productSize)
-                    <option value="{{ $productSize->id }}" @if($productSize->stock == 0) disabled @endif>
-                        {{ $productSize->size }} (@if($productSize->stock > 0) Stock: {{ $productSize->stock }} @else Out of Stock @endif)
+                    <option value="{{ $productSize->size }}" @if($productSize->stock == 0) disabled @endif>
+                        {{ $productSize->size }} @if($productSize->stock == 0) (Out of Stock) @else (Stock: {{ $productSize->stock }}) @endif
                     </option>
                 @endforeach
             </select>
