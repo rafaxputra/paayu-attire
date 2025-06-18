@@ -43,31 +43,22 @@
         </section>
     </div>
 
-    <div id="Bottom-nav" class="fixed-bottom">
-        <div class="container main-content-container">
-            <ul class="nav justify-content-around py-2">
-                <li class="nav-item">
-                    <a class="nav-link text-center" href="{{ route('front.index') }}">
-                        <div class="d-flex flex-column align-items-center"><i class="bi bi-house-door bottom-nav-icon"></i><span class="small">Browse</span></div>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-center active" href="{{ route('front.transactions') }}">
-                        <div class="d-flex flex-column align-items-center"><i class="bi bi-receipt bottom-nav-icon"></i><span class="small">Orders</span></div>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-center" href="{{ route('front.custom') }}">
-                        <div class="d-flex flex-column align-items-center"><i class="bi bi-pencil-square bottom-nav-icon"></i><span class="small">Custom</span></div>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-center" href="{{ route('front.contact') }}">
-                        <div class="d-flex flex-column align-items-center"><i class="bi bi-person bottom-nav-icon"></i><span class="small">Contact</span></div>
-                    </a>
-                </li>
-            </ul>
+    @if ($errors->has('error'))
+    <div id="not-found-popup" class="popup d-flex align-items-center justify-content-center" style="display:block;">
+        <div class="popup-content" style="min-width:280px;max-width:90vw;">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-exclamation-circle text-warning mb-2" style="font-size:2.5rem;"></i>
+                <p class="mb-2" style="font-weight:600;">{{ $errors->first('error') }}</p>
+                <button id="close-popup-btn" class="btn btn-primary mt-2">Tutup</button>
+            </div>
         </div>
     </div>
+    @endif
+    @include('front.components.bottom_navbar')
+    <script src="{{ asset('customjs/popup.js') }}"></script>
+    <style>
+    .popup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 200; }
+    .popup-content { background: var(--card-bg); padding: 24px 32px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); text-align: center; color: var(--text-color); }
+    </style>
 </main>
 @endsection

@@ -16,7 +16,10 @@
     <section class="d-flex flex-column gap-4 mt-4">
         <div class="text-center">
             <h1 class="h4 fw-bold mb-2">Hi, {{ Auth::user()->name }}! 👋</h1>
-            <p class="text-muted mb-0">Welcome to your dashboard.</p>
+            <div class="mt-2">
+                <span class="text-muted">If you want to log out, click </span>
+                <form action="{{ route('logout') }}" method="POST" class="d-inline">@csrf <button type="submit" class="btn btn-link p-0 m-0 align-baseline" style="vertical-align: baseline;">here</button></form>.
+            </div>
         </div>
 
         @if (session('success'))
@@ -85,7 +88,26 @@
     </section>
 
     <div class="modal fade" id="deleteAccountModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Confirm Account Deletion</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Are you sure you want to delete your account? This action cannot be undone.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><form action="{{ route('front.customer.deleteAccount') }}" method="POST">@csrf @method('DELETE')<button type="submit" class="btn btn-danger">Delete Account</button></form></div></div></div></div>
-    <div class="modal fade" id="unlinkGoogleModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Confirm Google Unlink</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Are you sure you want to unlink your Google account? You will need to set a password to log in afterwards.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><form action="#" method="POST">@csrf<button type="submit" class="btn btn-danger">Yes, Unlink</button></form></div></div></div></div>
+    <div class="modal fade" id="unlinkGoogleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Google Unlink</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to unlink your Google account? You will need to set a password to log in afterwards.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ route('front.customer.unlinkGoogle') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">Yes, Unlink</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </main>
 @endsection

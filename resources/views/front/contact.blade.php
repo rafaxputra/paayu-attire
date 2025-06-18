@@ -87,52 +87,6 @@
         </div>
     </section>
 
-    <div id="Bottom-nav" class="fixed-bottom">
-        <div class="container main-content-container">
-            <ul class="nav justify-content-around py-3">
-                <li class="nav-item">
-                    <a class="nav-link text-center" href="{{ route('front.index') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-house-door bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Browse</p>
-                        </div>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-center" href="{{ route('front.transactions') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-receipt bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Orders</p>
-                        </div>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    @guest
-                        <a class="nav-link text-center" href="{{ route('login') }}">
-                            <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                            </div>
-                        </a>
-                    @else
-                        <a class="nav-link text-center" href="{{ route('front.custom') }}">
-                            <div class="d-flex flex-column align-items-center">
-                                <i class="bi bi-pencil-square bottom-nav-icon"></i>
-                                <p class="mb-0" style="font-size: 0.8rem;">Custom</p>
-                            </div>
-                        </a>
-                    @endguest
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-center active" href="{{ route('front.contact') }}">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="bi bi-person-fill bottom-nav-icon"></i>
-                            <p class="mb-0" style="font-size: 0.8rem;">Contact</p>
-                        </div>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
+    @include('front.components.bottom_navbar')
 </main>
 @endsection

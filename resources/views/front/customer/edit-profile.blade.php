@@ -46,6 +46,12 @@
                 </div>
 
                 <div class="d-flex flex-column gap-2">
+                    <label for="password" class="form-label fw-semibold mb-0">Password</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Isi password barumu di sini" required>
+                    <small class="form-text text-muted">Wajib diisi jika Anda baru saja unlink Google. Kosongkan jika tidak ingin mengubah password.</small>
+                </div>
+
+                <div class="d-flex flex-column gap-2">
                     <label for="phone_number" class="form-label fw-semibold mb-0">Phone Number</label>
                     <input type="text" name="phone_number" id="phone_number" class="form-control" placeholder="Enter your phone number" value="{{ old('phone_number', $user->phone_number) }}" pattern="\d*" required>
                     <small class="form-text text-muted">Hanya bisa diisi dengan nomor/angka.</small>

@@ -33,8 +33,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('front.auth.google');
-    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+    
 });
+// Google OAuth Callback - Accessible to both guests and authenticated users
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
 /*
  * |--------------------------------------------------------------------------
@@ -54,6 +56,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [CustomerController::class, 'editProfile'])->name('editProfile');
         Route::put('/profile', [CustomerController::class, 'updateProfile'])->name('updateProfile');
         Route::delete('/delete-account', [CustomerController::class, 'deleteAccount'])->name('deleteAccount');
+        Route::post('/unlink-google', [CustomerController::class, 'unlinkGoogle'])->name('unlinkGoogle');
+        Route::get('/set-password', [CustomerController::class, 'showSetPasswordForm'])->name('setPassword');
+        Route::post('/set-password', [CustomerController::class, 'setPassword'])->name('setPassword.save');
     });
 
     // Transactions and Orders
@@ -81,4 +86,7 @@ Route::middleware('auth')->group(function () {
         // Commenting
         Route::post('/contact/comment', [FrontController::class, 'storeComment'])->name('contact.comment');
     });
+
+    // Route khusus untuk link Google ke akun yang sudah login
+    Route::get('/auth/google/link', [AuthController::class, 'redirectToGoogleLink'])->name('front.auth.google.link');
 });

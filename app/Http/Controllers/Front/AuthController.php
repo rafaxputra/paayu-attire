@@ -121,6 +121,16 @@ class AuthController extends Controller
     }
 
     /**
+     * Redirect the logged-in user to Google for account linking.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function redirectToGoogleLink()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    /**
      * Obtain the user information from Google.
      *
      * @return \Illuminate\Http\Response
@@ -195,19 +205,20 @@ class AuthController extends Controller
                     }
                     return redirect()->intended(route('front.index'));
                 } else {
-                    // Create a new user
+                    // Create a new user if email doesn't exist
                     $newUser = User::create([
                         'name' => $googleUser->name,
                         'email' => $googleUser->email,
                         'google_id' => $googleUser->id,
                         'google_token' => $googleUser->token,
                         'password' => Hash::make(Str::random(16)), // Generate a random password
-                        'phone_number' => null, // Set phone_number to null initially for Google users
+                        'phone_number' => null, // Set phone_number to null initially
                     ]);
 
                     Auth::login($newUser);
-                    // Redirect new Google users to edit profile to add phone number
-                    return redirect()->route('front.customer.editProfile');
+
+                    // Redirect new Google users to edit profile to add phone number and set a proper password
+                    return redirect()->route('front.customer.editProfile')->with('info', 'Welcome! Please complete your profile by adding a phone number.');
                 }
             }
         } catch (\Exception $e) {
@@ -216,4 +227,6 @@ class AuthController extends Controller
             return redirect(route('front.index'))->withErrors(['google_login' => 'Unable to process Google login or linking. Please try again.']);
         }
     }
+
+    
 }
