@@ -47,7 +47,7 @@
 
                 <div class="d-flex flex-column gap-2">
                     <label for="password" class="form-label fw-semibold mb-0">Password</label>
-                    <input type="password" name="password" id="password" class="form-control" placeholder="Isi password barumu di sini" required>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Isi password barumu di sini" value="{{ old('password') }}" minlength="8">
                     <small class="form-text text-muted">Wajib diisi jika Anda baru saja unlink Google. Kosongkan jika tidak ingin mengubah password.</small>
                 </div>
 
