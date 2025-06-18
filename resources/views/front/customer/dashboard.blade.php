@@ -39,7 +39,7 @@
                         <i class="bi bi-google"></i> Unlink Google Account
                     </button>
                 @else
-                    <a href="{{ route('front.auth.google') }}" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-google"></i> Link to Google Account</a>
+                    <a href="{{ route('front.auth.google.link') }}" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-google"></i> Link to Google Account</a>
                 @endif
 
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">

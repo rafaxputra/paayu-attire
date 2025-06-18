@@ -38,18 +38,6 @@
         </div>
     </div>
     
-    @if ($errors->any())
-        <div class="px-3 mb-3">
-            <div class="alert alert-danger" role="alert">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-    @endif
-
     <div class="px-3 mb-3">
         <form action="{{ route('front.index') }}" method="GET">
             <div class="input-group">
