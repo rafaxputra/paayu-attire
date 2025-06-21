@@ -73,50 +73,6 @@ public static function form(Form $form): Form
             Forms\Components\TextInput::make('color')
                 ->required()
                 ->maxLength(255),
-            Forms\Components\Select::make('selected_size_chart')
-                ->label('Selected Size')
-                ->options([
-                    'S' => 'S',
-                    'M' => 'M',
-                    'L' => 'L',
-                    'XL' => 'XL',
-                    'custom' => 'Custom Size',
-                ])
-                ->required()
-                ->reactive()
-                ->afterStateUpdated(function ($state, $set) {
-                    if ($state !== 'custom') {
-                        $set('lebar_bahu_belakang', null);
-                        $set('lingkar_panggul', null);
-                        $set('lingkar_pinggul', null);
-                        $set('lingkar_dada', null);
-                        $set('kerung_lengan', null);
-                    }
-                }),
-            Forms\Components\Fieldset::make('Custom Measurements')
-                ->visible(fn(Forms\Get $get): bool => $get('selected_size_chart') === 'custom')
-                ->schema([
-                    Forms\Components\TextInput::make('lebar_bahu_belakang')
-                        ->label('Lebar Bahu Belakang (cm)')
-                        ->numeric()
-                        ->required(fn(Forms\Get $get): bool => $get('selected_size_chart') === 'custom'),
-                    Forms\Components\TextInput::make('lingkar_panggul')
-                        ->label('Lingkar Panggul (cm)')
-                        ->numeric()
-                        ->required(fn(Forms\Get $get): bool => $get('selected_size_chart') === 'custom'),
-                    Forms\Components\TextInput::make('lingkar_pinggul')
-                        ->label('Lingkar Pinggul (cm)')
-                        ->numeric()
-                        ->required(fn(Forms\Get $get): bool => $get('selected_size_chart') === 'custom'),
-                    Forms\Components\TextInput::make('lingkar_dada')
-                        ->label('Lingkar Dada (cm)')
-                        ->numeric()
-                        ->required(fn(Forms\Get $get): bool => $get('selected_size_chart') === 'custom'),
-                    Forms\Components\TextInput::make('kerung_lengan')
-                        ->label('Kerung Lengan (cm)')
-                        ->numeric()
-                        ->required(fn(Forms\Get $get): bool => $get('selected_size_chart') === 'custom'),
-                ]),
             Forms\Components\Textarea::make('kebaya_preference')
                 ->required()
                 ->columnSpanFull()
@@ -177,9 +133,6 @@ public static function table(Table $table): Table
             Tables\Columns\TextColumn::make('material')
                 ->searchable(),
             Tables\Columns\TextColumn::make('color')
-                ->searchable(),
-            Tables\Columns\TextColumn::make('selected_size_chart')
-                ->label('Selected Size')
                 ->searchable(),
             Tables\Columns\TextColumn::make('amount_to_buy')
                 ->label('Quantity')

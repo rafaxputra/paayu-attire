@@ -40,10 +40,6 @@ class ProductResource extends Resource
                     ->label('Color')
                     ->maxLength(255),
 
-                Forms\Components\Textarea::make('size_chart') // Added size_chart field
-                    ->label('Size Chart')
-                    ->maxLength(1024),
-
                 Forms\Components\TextInput::make('price')
                     ->required()
                     ->numeric()
