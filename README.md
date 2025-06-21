@@ -23,7 +23,6 @@
 - 🛡️ **Admin Panel**: Filament-powered, status transaksi sinkron, denda bisa diatur admin.
 - 📱 **Responsive UI**: Bootstrap 5, custom main.css, dan font Poppins.
 - 🖼️ **Upload Bukti & Komentar**: Upload bukti pembayaran dan gambar di komentar.
-- 📊 **Laporan**: Export Excel (opsional, jika diaktifkan).
 
 ## 🛠️ Tech Stack
 | Komponen        | Teknologi                           |
