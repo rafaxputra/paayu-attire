@@ -52,7 +52,7 @@
 ## 🚀 Instalasi
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/paayu-attire.git
+git clone https://github.com/rafaxputra/paayu-attire.git
 cd paayu-attire
 
 # Install dependencies
