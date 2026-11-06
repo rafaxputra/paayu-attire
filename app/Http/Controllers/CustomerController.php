@@ -53,11 +53,14 @@ class CustomerController extends Controller
     {
         $user = Auth::user();
 
-        // Log out the user before deleting the account
-        Auth::logout();
-
-        // Delete the user's account
+        // The comments FK is RESTRICT (no onDelete), so deleting a user
+        // who ever posted a comment failed with a 500 — and because the
+        // old code logged the user out first, they ended up logged out
+        // with their account still intact. Remove the comments first,
+        // then delete the account, and only then log out.
+        $user->comments()->delete();
         $user->delete();
+        Auth::logout();
 
         return redirect()->route('front.index')->with('success', 'Your account has been deleted successfully.');
     }

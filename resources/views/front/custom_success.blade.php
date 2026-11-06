@@ -71,19 +71,52 @@
 <script>
 function copyOrderId() {
     const orderId = document.getElementById('orderId').innerText;
-    navigator.clipboard.writeText(orderId).then(() => {
-        const copyBtn = document.getElementById('copyBtn');
-        const originalIcon = copyBtn.innerHTML;
+    const copyBtn = document.getElementById('copyBtn');
+    const originalIcon = copyBtn.innerHTML;
+
+    function showCopied() {
         copyBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
         copyBtn.disabled = true;
-
         setTimeout(() => {
             copyBtn.innerHTML = originalIcon;
             copyBtn.disabled = false;
         }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy Order ID: ', err);
-    });
+    }
+
+    function showFailed() {
+        // navigator.clipboard needs a secure context (https); on plain
+        // http (localhost) it is undefined and the old code failed
+        // silently. Show the failure on the button instead.
+        copyBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+        copyBtn.title = 'Gagal menyalin otomatis — salin manual dari teks di atas.';
+        setTimeout(() => {
+            copyBtn.innerHTML = originalIcon;
+            copyBtn.removeAttribute('title');
+        }, 3000);
+    }
+
+    function copyFallback(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            ok ? showCopied() : showFailed();
+        } catch (e) {
+            document.body.removeChild(ta);
+            showFailed();
+        }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(orderId).then(showCopied).catch(() => copyFallback(orderId));
+    } else {
+        copyFallback(orderId);
+    }
 }
 </script>
 @endpush

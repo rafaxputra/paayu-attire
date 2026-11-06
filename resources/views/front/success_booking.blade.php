@@ -24,8 +24,10 @@
                 <div class="d-flex flex-column gap-4">
                     <div class="text-center">
                         <p class="small text-muted mb-2">You have booked:</p>
+                        @if ($transaction->product)
                         <img src="{{ Storage::url($transaction->product->thumbnail) }}" alt="Thumbnail" class="img-fluid rounded-3 mx-auto" style="max-height: 150px; object-fit: contain;" />
-                        <p class="fw-bold fs-5 mt-2 mb-0">{{ $transaction->product->name }}</p>
+                        @endif
+                        <p class="fw-bold fs-5 mt-2 mb-0">{{ $transaction->product->name ?? 'Produk tidak tersedia' }}</p>
                     </div>
 
                     <div class="card p-3">
@@ -78,19 +80,52 @@
 <script>
 function copyBookingId() {
     const bookingId = document.getElementById('bookingId').innerText;
-    navigator.clipboard.writeText(bookingId).then(() => {
-        const copyBtn = document.getElementById('copyBtn');
-        const originalIcon = copyBtn.innerHTML;
+    const copyBtn = document.getElementById('copyBtn');
+    const originalIcon = copyBtn.innerHTML;
+
+    function showCopied() {
         copyBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
         copyBtn.disabled = true;
-
         setTimeout(() => {
             copyBtn.innerHTML = originalIcon;
             copyBtn.disabled = false;
         }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy Booking ID: ', err);
-    });
+    }
+
+    function showFailed() {
+        // navigator.clipboard needs a secure context (https); on plain
+        // http (localhost) it is undefined and the old code failed
+        // silently. Show the failure on the button instead.
+        copyBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+        copyBtn.title = 'Gagal menyalin otomatis — salin manual dari teks di atas.';
+        setTimeout(() => {
+            copyBtn.innerHTML = originalIcon;
+            copyBtn.removeAttribute('title');
+        }, 3000);
+    }
+
+    function copyFallback(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            ok ? showCopied() : showFailed();
+        } catch (e) {
+            document.body.removeChild(ta);
+            showFailed();
+        }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(bookingId).then(showCopied).catch(() => copyFallback(bookingId));
+    } else {
+        copyFallback(bookingId);
+    }
 }
 </script>
 @endpush

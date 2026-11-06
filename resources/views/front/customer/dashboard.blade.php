@@ -28,6 +28,19 @@
             </div>
         @endif
 
+        {{-- Google account linking redirects here with errors (e.g. the
+             Google account is already bound to another user); without
+             this block the redirect landed silently with no message. --}}
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="card p-4">
             <h2 class="h6 mb-3 fw-semibold">Account Management</h2>
             <div class="d-grid gap-3">
@@ -61,7 +74,7 @@
                         <span class="badge rounded-pill bg-info-subtle text-info-emphasis">{{ $transaction->status->getLabel() }}</span>
                     </div>
                     <hr class="my-1">
-                    <p class="mb-0 small text-muted">Product: {{ $transaction->product->name }}</p>
+                    <p class="mb-0 small text-muted">Product: {{ $transaction->product->name ?? 'Produk tidak tersedia' }}</p>
                     <a href="{{ route('front.transactions.details', ['trx_id' => $transaction->trx_id, 'phone_number' => $transaction->phone_number]) }}" class="btn btn-sm btn-outline-secondary mt-2 align-self-end">View Details</a>
                 </div>
             @empty
@@ -114,29 +127,45 @@
 
 @push('after-scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const rentalBtn = document.getElementById('showRentalHistory');
-    const customBtn = document.getElementById('showCustomHistory');
-    const rentalHistory = document.getElementById('rentalHistory');
-    const customHistory = document.getElementById('customHistory');
+// Rental / custom history toggle. Runs immediately (this script is
+// pushed after the content, so the buttons already exist) instead of
+// waiting for DOMContentLoaded — the same wait that left the
+// night-mode toggle and the gallery dead on the forwarded site.
+(function () {
+    function init() {
+        const rentalBtn = document.getElementById('showRentalHistory');
+        const customBtn = document.getElementById('showCustomHistory');
+        const rentalHistory = document.getElementById('rentalHistory');
+        const customHistory = document.getElementById('customHistory');
 
-    rentalBtn.addEventListener('click', function() {
-        rentalHistory.classList.remove('d-none');
-        customHistory.classList.add('d-none');
-        rentalBtn.classList.add('btn-primary');
-        rentalBtn.classList.remove('btn-outline-secondary');
-        customBtn.classList.add('btn-outline-secondary');
-        customBtn.classList.remove('btn-primary');
-    });
+        if (!rentalBtn || !customBtn || !rentalHistory || !customHistory) {
+            return false;
+        }
 
-    customBtn.addEventListener('click', function() {
-        customHistory.classList.remove('d-none');
-        rentalHistory.classList.add('d-none');
-        customBtn.classList.add('btn-primary');
-        customBtn.classList.remove('btn-outline-secondary');
-        rentalBtn.classList.add('btn-outline-secondary');
-        rentalBtn.classList.remove('btn-primary');
-    });
-});
+        rentalBtn.addEventListener('click', function() {
+            rentalHistory.classList.remove('d-none');
+            customHistory.classList.add('d-none');
+            rentalBtn.classList.add('btn-primary');
+            rentalBtn.classList.remove('btn-outline-secondary');
+            customBtn.classList.add('btn-outline-secondary');
+            customBtn.classList.remove('btn-primary');
+        });
+
+        customBtn.addEventListener('click', function() {
+            customHistory.classList.remove('d-none');
+            rentalHistory.classList.add('d-none');
+            customBtn.classList.add('btn-primary');
+            customBtn.classList.remove('btn-outline-secondary');
+            rentalBtn.classList.add('btn-outline-secondary');
+            rentalBtn.classList.remove('btn-primary');
+        });
+
+        return true;
+    }
+
+    if (!init() && document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    }
+})();
 </script>
 @endpush

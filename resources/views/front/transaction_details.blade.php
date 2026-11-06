@@ -47,12 +47,14 @@
                     $statuses = [
                         \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
                         \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED,
+                        \App\Enums\RentalTransactionStatus::READY_FOR_PICKUP,
                         \App\Enums\RentalTransactionStatus::IN_RENTAL,
                         \App\Enums\RentalTransactionStatus::COMPLETED,
                     ];
                     $statusLabels = [
                         \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION->value => 'Verifying',
                         \App\Enums\RentalTransactionStatus::PAYMENT_VALIDATED->value => 'Verified',
+                        \App\Enums\RentalTransactionStatus::READY_FOR_PICKUP->value => 'Ready',
                         \App\Enums\RentalTransactionStatus::IN_RENTAL->value => 'Rented',
                         \App\Enums\RentalTransactionStatus::COMPLETED->value => 'Completed'
                     ];
@@ -127,7 +129,7 @@
                 <hr class="my-2 border-white opacity-25">
                 <form action="{{ route('front.checkout.store') }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-3">
                     @csrf
-                    <input type="hidden" name="product_slug" value="{{ $details->product->slug }}">
+                    <input type="hidden" name="product_slug" value="{{ $details->product->slug ?? '' }}">
                     <input type="hidden" name="duration" value="{{ $details->duration }}">
                     <input type="hidden" name="started_at" value="{{ $details->started_at->toDateString() }}">
                     <input type="hidden" name="ended_at" value="{{ $details->ended_at->toDateString() }}">
@@ -153,6 +155,21 @@
                             Saya benar telah transfer
                         </label>
                     </div>
+                    {{-- Same two confirmations as the main checkout form:
+                         StorePaymentRequest now requires them server-side,
+                         so the re-upload form must carry them too. --}}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="confirm_penalty" id="confirm_penalty" required>
+                        <label class="form-check-label" for="confirm_penalty">
+                            Saya memahami jika tidak mengembalikan barang hingga <b>{{ $details->ended_at->format('d M Y') }}</b>, saya akan dikenakan denda <b>Rp {{ number_format($details->total_amount * 0.2, 0, ',', '.') }}</b> x jumlah hari keterlambatan.
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="confirm_identity" id="confirm_identity" required>
+                        <label class="form-check-label" for="confirm_identity">
+                            Saya memahami saat mengambil barang, saya harus meninggalkan salah satu kartu identitas (KTP atau identitas lain) sebagai jaminan.
+                        </label>
+                    </div>
                     <button type="submit" class="btn btn-light w-100">Unggah Ulang & Kirim Ulang Pembayaran</button>
                 </form>
                 {{-- The cancel form must NOT be nested inside the re-upload
@@ -169,11 +186,13 @@
 
         <div class="card p-3">
             <div class="d-flex align-items-center gap-3">
+                @if ($details->product)
                 <div class="flex-shrink-0 rounded-2 overflow-hidden" style="width: 80px; height: 80px;">
                     <img src="{{ Storage::url($details->product->thumbnail) }}" class="img-fluid rounded-2" alt="thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
+                @endif
                 <div class="flex-grow-1">
-                    <p class="fw-bold mb-0">{{ $details->product->name }}</p>
+                    <p class="fw-bold mb-0">{{ $details->product->name ?? 'Produk tidak tersedia' }}</p>
                     <span class="badge bg-secondary mt-2">Ukuran yang dipilih: {{ $details->selected_size }}</span>
                 </div>
             </div>

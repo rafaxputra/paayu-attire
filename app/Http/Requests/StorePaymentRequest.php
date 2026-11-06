@@ -40,6 +40,12 @@ class StorePaymentRequest extends FormRequest
             'payment_proof' => ['required', 'image', 'mimes:jpg,png'],
             'payment_method' => ['required', 'string', 'in:BCA,BRI'],
             'confirm_payment' => ['accepted'],
+            // confirm_penalty / confirm_identity were HTML-required only,
+            // so a direct POST skipped them. They are now enforced here;
+            // the PAYMENT_FAILED re-upload form carries the same two
+            // checkboxes, so re-uploads still pass.
+            'confirm_penalty' => ['accepted'],
+            'confirm_identity' => ['accepted'],
         ];
     }
 }

@@ -54,6 +54,24 @@
                 <i class="bi bi-chat-dots"></i> User Comments
             </h2>
 
+            {{-- Comment submissions redirect back with a success flash
+                 (or validation errors); without these blocks a sent
+                 comment — or a rejected image — showed no feedback. --}}
+            @if (session('success'))
+                <div class="alert alert-success" role="alert">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert-danger" role="alert">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @if(Auth::check())
                 <form action="{{ route('front.contact.comment') }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-3">
                     @csrf

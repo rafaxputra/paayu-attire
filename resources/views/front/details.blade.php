@@ -169,10 +169,14 @@
                     <p class="mb-0" style="font-size: 0.9rem;">/day</p>
                 </div>
                 @php
-                    $allOutOfStock = $product->productSizes->count() > 0 && $product->productSizes->every(fn($size) => $size->stock == 0);
+                    // A product with no sizes at all must not show Rent
+                    // Now either: the booking page would have no valid
+                    // size option and every submit would fail validation.
+                    $noSizes = $product->productSizes->count() === 0;
+                    $allOutOfStock = $noSizes || $product->productSizes->every(fn($size) => $size->stock == 0);
                 @endphp
                 @if($allOutOfStock)
-                    <button class="btn btn-secondary d-flex align-items-center gap-2" disabled><i class="bi bi-cart-x"></i> Semua stok sedang habis</button>
+                    <button class="btn btn-secondary d-flex align-items-center gap-2" disabled><i class="bi bi-cart-x"></i> {{ $noSizes ? 'Belum tersedia' : 'Semua stok sedang habis' }}</button>
                 @else
                     <a href="{{ route('front.booking', $product->slug) }}" class="btn btn-primary d-flex align-items-center gap-2"><i class="bi bi-cart-plus"></i> Rent Now</a>
                 @endif

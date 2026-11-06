@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained();
+            // onDelete('set null'): without it the FK is RESTRICT and
+            // deleting a user who ever commented fails with a 500.
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->string('name');
             $table->text('comment');
             $table->string('image')->nullable();

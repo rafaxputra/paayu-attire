@@ -37,7 +37,10 @@ class RentalTransaction extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        // Product uses SoftDeletes: without withTrashed() a soft-deleted
+        // product resolves to null here and the dashboard / transaction
+        // details / success pages 500 reading ->name / ->thumbnail.
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     // Define the relationship with the User model
@@ -68,7 +71,10 @@ class RentalTransaction extends Model
         if ($this->status === \App\Enums\RentalTransactionStatus::LATE_RETURNED) {
             $lateDays = $this->late_days;
             if ($lateDays === null) {
-                $lateDays = now()->diffInDays($this->ended_at, false);
+                // Operands were flipped: now()->diffInDays(ended_at) is
+                // negative once ended_at has passed, so it clamped to 0
+                // and the late-fee card never showed. ended_at first.
+                $lateDays = $this->ended_at->diffInDays(now(), false);
                 if ($lateDays < 0) $lateDays = 0;
             }
             $lateFee = $this->late_fee;

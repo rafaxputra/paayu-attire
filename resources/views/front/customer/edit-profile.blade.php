@@ -26,6 +26,15 @@
                 </div>
             @endif
 
+            {{-- Unlinking Google redirects here with an 'info' flash
+                 ("you must set a password before logging in again");
+                 without this block it never showed. --}}
+            @if (session('info'))
+                <div class="alert alert-info" role="alert">
+                    {{ session('info') }}
+                </div>
+            @endif
+
             @if ($errors->any())
                 <div class="alert alert-danger" role="alert">
                     <ul class="mb-0">

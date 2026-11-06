@@ -55,11 +55,11 @@
                     </div>
                     <div class="d-flex flex-column gap-2">
                         <label for="material" class="form-label mb-0">Material</label>
-                        <input type="text" name="material" id="material" class="form-control required-for-section-2" placeholder="e.g., Silk, Batik, Brocade" required>
+                        <input type="text" name="material" id="material" class="form-control required-for-section-2" placeholder="e.g., Silk, Batik, Brocade" value="{{ old('material') }}" required>
                     </div>
                     <div class="d-flex flex-column gap-2">
                         <label for="color" class="form-label mb-0">Color</label>
-                        <input type="text" name="color" id="color" class="form-control required-for-section-2" placeholder="e.g., Pastel Blue, Maroon, Gold" required>
+                        <input type="text" name="color" id="color" class="form-control required-for-section-2" placeholder="e.g., Pastel Blue, Maroon, Gold" value="{{ old('color') }}" required>
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
                         <label for="size_chart_option" class="form-label mb-0">Choose Size</label>
                         <select name="size_chart_option" id="size_chart_option" class="form-select required-for-section-3" required>
                             <option value="">Select Size</option>
-                            <option value="S">S</option> <option value="M">M</option> <option value="L">L</option> <option value="XL">XL</option> <option value="custom">Custom Size</option>
+                            <option value="S" {{ old('size_chart_option') == 'S' ? 'selected' : '' }}>S</option> <option value="M" {{ old('size_chart_option') == 'M' ? 'selected' : '' }}>M</option> <option value="L" {{ old('size_chart_option') == 'L' ? 'selected' : '' }}>L</option> <option value="XL" {{ old('size_chart_option') == 'XL' ? 'selected' : '' }}>XL</option> <option value="custom" {{ old('size_chart_option') == 'custom' ? 'selected' : '' }}>Custom Size</option>
                         </select>
                     </div>
                     <div class="d-block" id="sizeChartTable">
@@ -103,11 +103,11 @@
                     </div>
                     <div class="d-flex flex-column gap-3 d-none" id="customSizeInputs">
                         <p class="fw-semibold mb-0">Enter Custom Measurements (cm)</p>
-                        <input type="number" name="lebar_bahu_belakang" class="form-control" placeholder="Lebar Bahu Belakang" min="0" step="any">
-                        <input type="number" name="lingkar_panggul" class="form-control" placeholder="Lingkar Panggul" min="0" step="any">
-                        <input type="number" name="lingkar_pinggul" class="form-control" placeholder="Lingkar Pinggul" min="0" step="any">
-                        <input type="number" name="lingkar_dada" class="form-control" placeholder="Lingkar Dada" min="0" step="any">
-                        <input type="number" name="kerung_lengan" class="form-control" placeholder="Kerung Lengan" min="0" step="any">
+                        <input type="number" name="lebar_bahu_belakang" class="form-control" placeholder="Lebar Bahu Belakang" min="0" step="any" value="{{ old('lebar_bahu_belakang') }}">
+                        <input type="number" name="lingkar_panggul" class="form-control" placeholder="Lingkar Panggul" min="0" step="any" value="{{ old('lingkar_panggul') }}">
+                        <input type="number" name="lingkar_pinggul" class="form-control" placeholder="Lingkar Pinggul" min="0" step="any" value="{{ old('lingkar_pinggul') }}">
+                        <input type="number" name="lingkar_dada" class="form-control" placeholder="Lingkar Dada" min="0" step="any" value="{{ old('lingkar_dada') }}">
+                        <input type="number" name="kerung_lengan" class="form-control" placeholder="Kerung Lengan" min="0" step="any" value="{{ old('kerung_lengan') }}">
                     </div>
                 </div>
             </div>
@@ -125,11 +125,11 @@
                     </div>
                     <div class="d-flex flex-column gap-2">
                         <label for="amount_to_buy" class="form-label mb-0">Quantity (max 15)</label>
-                        <input type="number" name="amount_to_buy" id="amount_to_buy" class="form-control required-for-section-4" placeholder="Enter quantity" min="1" max="15" required>
+                        <input type="number" name="amount_to_buy" id="amount_to_buy" class="form-control required-for-section-4" placeholder="Enter quantity" min="1" max="15" value="{{ old('amount_to_buy') }}" required>
                     </div>
                     <div class="d-flex flex-column gap-2">
                         <label for="date_needed" class="form-label mb-0">Date Kebaya Needed</label>
-                        <input type="date" name="date_needed" id="date_needed" class="form-control required-for-section-4" required>
+                        <input type="date" name="date_needed" id="date_needed" class="form-control required-for-section-4" value="{{ old('date_needed') }}" required>
                     </div>
                 </div>
             </div>
@@ -145,29 +145,35 @@
 
 @push('after-scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+// Size-chart toggle + section checkmarks. Runs immediately (this
+// script is pushed after the content, so the form already exists)
+// instead of waiting for DOMContentLoaded — the same wait that left
+// the night-mode toggle and the gallery dead on the forwarded site.
+(function () {
+    function init() {
     const sizeOption = document.getElementById('size_chart_option');
-    if (sizeOption) {
-        const sizeChartTable = document.getElementById('sizeChartTable');
-        const customSizeInputs = document.getElementById('customSizeInputs');
-
-        const toggleSizing = () => {
-            if (sizeOption.value === 'custom') {
-                sizeChartTable.classList.add('d-none');
-                customSizeInputs.classList.remove('d-none');
-                customSizeInputs.querySelectorAll('input').forEach(input => input.required = true);
-            } else {
-                sizeChartTable.classList.remove('d-none');
-                customSizeInputs.classList.add('d-none');
-                customSizeInputs.querySelectorAll('input').forEach(input => {
-                    input.required = false;
-                    input.value = '';
-                });
-            }
-        };
-        sizeOption.addEventListener('change', toggleSizing);
-        toggleSizing();
+    if (!sizeOption) {
+        return false;
     }
+    const sizeChartTable = document.getElementById('sizeChartTable');
+    const customSizeInputs = document.getElementById('customSizeInputs');
+
+    const toggleSizing = () => {
+        if (sizeOption.value === 'custom') {
+            sizeChartTable.classList.add('d-none');
+            customSizeInputs.classList.remove('d-none');
+            customSizeInputs.querySelectorAll('input').forEach(input => input.required = true);
+        } else {
+            sizeChartTable.classList.remove('d-none');
+            customSizeInputs.classList.add('d-none');
+            customSizeInputs.querySelectorAll('input').forEach(input => {
+                input.required = false;
+                input.value = '';
+            });
+        }
+    };
+    sizeOption.addEventListener('change', toggleSizing);
+    toggleSizing();
 
     const sections = document.querySelectorAll('[data-section]');
     sections.forEach(section => {
@@ -196,6 +202,13 @@ document.addEventListener('DOMContentLoaded', function () {
             checkSection();
         }
     });
-});
+
+        return true;
+    }
+
+    if (!init() && document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    }
+})();
 </script>
 @endpush

@@ -66,7 +66,7 @@
                 <span class="input-group-text">
                     <i class="bi bi-calendar-event"></i>
                 </span>
-                <input type="date" name="started_at" id="date" class="form-control" min="{{ now()->addDay()->toDateString() }}" required />
+                <input type="date" name="started_at" id="date" class="form-control" min="{{ now()->toDateString() }}" required />
             </div>
         </div>
 

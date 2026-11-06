@@ -36,6 +36,10 @@
     
     <div class="px-3 mb-3">
         <form action="{{ route('front.index') }}" method="GET">
+            {{-- Keep the active filter/sort when searching, otherwise the
+                 search wipes the size and price sort (and vice versa). --}}
+            @if (request('size'))<input type="hidden" name="size" value="{{ request('size') }}">@endif
+            @if (request('sort_price'))<input type="hidden" name="sort_price" value="{{ request('sort_price') }}">@endif
             <div class="input-group">
                 <input type="text" name="search" class="form-control" placeholder="Search kebaya..." value="{{ request('search') }}">
                 <button class="btn btn-primary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
@@ -45,6 +49,8 @@
 
     <div class="px-3 mb-4">
         <form action="{{ route('front.index') }}" method="GET" class="d-flex align-items-center gap-2">
+            {{-- Keep the active search keyword when applying the filter. --}}
+            @if (request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif
             <i class="bi bi-filter fs-5 text-muted"></i>
             <div class="flex-grow-1 d-flex gap-2">
                 <select name="size" id="size-filter" class="form-select form-select-sm">

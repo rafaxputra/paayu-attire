@@ -87,7 +87,9 @@ class FrontController extends Controller
         // The checkout page is reached via query string, so a tampered URL
         // could carry duration 0 / negative or a size that does not exist.
         // Send the user back to booking instead of showing a Rp 0 total.
-        if ($duration < 1 || !$productSize) {
+        // Also refuse a size whose stock is already 0: without this the
+        // user only finds out in checkout_store, after uploading proof.
+        if ($duration < 1 || !$productSize || $productSize->stock < 1) {
             return redirect()->route('front.booking', $product->slug)
                 ->withErrors(['error' => 'Invalid booking details. Please choose a size and duration again.']);
         }
@@ -115,8 +117,17 @@ class FrontController extends Controller
         $endedDate = Carbon::parse($request->ended_at);
         $totalAmount = $product->price * $duration;
 
-        // Store + optimise the proof BEFORE touching the database, so a
+        // Stock pre-check BEFORE storing the proof file: the locked
+        // check inside the DB transaction below is authoritative, but
+        // without this the proof was stored first and left as an orphan
+        // file whenever the size turned out to be out of stock. The
+        // proof is still stored before touching the database, so a
         // corrupt image fails before any order is created.
+        $earlySize = $product->productSizes()->where('size', $selectedSize)->first();
+        if (!$earlySize || $earlySize->stock <= 0) {
+            throw ValidationException::withMessages(['selected_size' => 'Selected size is out of stock.']);
+        }
+
         $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
         $this->optimizeUploadedImage($proofPath);
 
