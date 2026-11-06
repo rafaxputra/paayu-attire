@@ -9,7 +9,7 @@
             </a>
             <p class="h5 mb-0 fw-semibold">Customer Registration</p>
             {{-- Dark/Light Mode Toggle Button --}}
-            <button id="theme-toggle" class="btn p-0">
+            <button type="button" id="theme-toggle" class="btn p-0">
                 <i class="bi bi-moon fs-4"></i>
             </button>
         </div>

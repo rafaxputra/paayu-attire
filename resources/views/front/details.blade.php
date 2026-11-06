@@ -11,25 +11,30 @@
             <i class="bi bi-arrow-left fs-4"></i>
         </a>
         <p class="h5 mb-0 fw-semibold">Details</p>
-        <button id="theme-toggle" class="btn p-0">
+        <button type="button" id="theme-toggle" class="btn p-0">
             <i class="bi bi-moon fs-4"></i>
         </button>
     </div>
 
-    <section id="Thumbnail" class="d-flex flex-column align-items-center justify-content-center position-relative card mx-3" style="height: 400px; padding-top: 0; padding-bottom: 66px;">
-        <div class="w-100 h-100 d-flex align-items-center justify-content-center flex-shrink-0">
+    {{-- Gallery: main image full-width on top, thumbnails in a row below
+         it. Previously the thumbnails overlapped the bottom of a fixed
+         400px frame while the narrow portrait image sat in the middle
+         with wide empty space on both sides. --}}
+    <section id="Thumbnail" class="card mx-3 p-3">
+        <div class="gallery-main">
             <img id="mainThumbnail" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}"
-                 class="img-fluid object-fit-cover transition-opacity duration-500 ease-in-out h-100 rounded-3"
+                 class="transition-opacity duration-500 ease-in-out"
                  role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#imageLightbox"
-                 aria-label="Perbesar gambar" style="cursor: zoom-in;" />
+                 aria-label="Perbesar gambar" style="cursor: zoom-in;"
+                 fetchpriority="high" decoding="async" />
         </div>
-        <div class="d-flex gap-3 position-absolute" style="bottom: 30px; width: 100%; justify-content: center;">
+        <div class="d-flex gap-3 justify-content-center mt-3">
             <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0 thumbnail-active-ring" style="width: 70px; height: 70px;" aria-label="Lihat gambar utama">
-                <img src="{{ Storage::url($product->thumbnail) }}" alt="Thumbnail" class="rounded-circle object-fit-cover" style="width: 100%; height: 100%;" />
+                <img src="{{ Storage::url($product->thumbnail) }}" alt="Thumbnail" class="rounded-circle object-fit-cover" style="width: 100%; height: 100%;" loading="lazy" decoding="async" />
             </button>
             @forelse ($product->photos as $photo)
             <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 70px; height: 70px;" aria-label="Lihat gambar {{ $loop->iteration + 1 }}">
-                <img src="{{ Storage::url($photo->photo) }}" alt="Thumbnail" class="img-fluid rounded-circle object-fit-cover" style="width: 100%; height: 100%;" />
+                <img src="{{ Storage::url($photo->photo) }}" alt="Thumbnail" class="img-fluid rounded-circle object-fit-cover" style="width: 100%; height: 100%;" loading="lazy" decoding="async" />
             </button>
             @empty
             @endforelse

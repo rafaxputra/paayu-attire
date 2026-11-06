@@ -7,7 +7,7 @@
 
             <div class="card p-4 p-md-5 w-100 text-center position-relative">
                 
-                <button id="theme-toggle" class="btn p-0 position-absolute" style="top: 1.25rem; right: 1.25rem;">
+                <button type="button" id="theme-toggle" class="btn p-0 position-absolute" style="top: 1.25rem; right: 1.25rem;">
                     <i class="bi bi-moon fs-4"></i>
                 </button>
                 

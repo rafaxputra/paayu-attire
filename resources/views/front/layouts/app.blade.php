@@ -23,17 +23,18 @@
     <script>
         // Night-mode toggle.
         //
-        // Runs immediately instead of waiting for DOMContentLoaded: this
-        // script sits after @yield('content'), so #theme-toggle already
-        // exists, and waiting for DOMContentLoaded proved fragile — on
-        // the forwarded site the toggle stopped working entirely (the
-        // click listener was never attached). Storage access is guarded:
-        // if localStorage is unavailable/blocked, a throw used to kill
-        // this whole script before the listener was attached; now the
-        // toggle keeps working in-memory and just doesn't remember the
-        // choice.
+        // Hardened twice over, because the toggle kept dying on the
+        // forwarded site: first it waited for DOMContentLoaded and the
+        // listener was never attached; then it ran immediately with a
+        // direct listener and STILL did not work. So now the click is
+        // handled by delegation on `document` — it works no matter when
+        // the button enters the DOM, and there is exactly one listener
+        // (no direct one to double-toggle with). Storage access is
+        // guarded: if localStorage is unavailable/blocked, a throw used
+        // to kill this whole script before anything was attached; now
+        // the toggle keeps working in-memory and just doesn't remember
+        // the choice.
         (function () {
-            var themeToggle = document.getElementById('theme-toggle');
             var htmlElement = document.documentElement; // Target the html element
             var paayuLogo = document.getElementById('paayu-logo'); // Get the logo element
 
@@ -60,16 +61,10 @@
                 }
             }
 
-            // Function to set the theme and update logo
-            function setTheme(theme) {
-                htmlElement.setAttribute('data-bs-theme', theme);
-                writeStoredTheme(theme);
-                updateThemeIcon(theme);
-                updateLogo(theme); // Call updateLogo when theme changes
-            }
-
-            // Function to update the icon
+            // Function to update the icon (looks the button up fresh, so
+            // it works even if the button was rendered after this script)
             function updateThemeIcon(theme) {
+                var themeToggle = document.getElementById('theme-toggle');
                 if (themeToggle) { // Check if the button exists
                     var icon = themeToggle.querySelector('i');
                     if (icon) { // Check if icon element exists
@@ -84,19 +79,37 @@
                 }
             }
 
-            // Get the preferred theme from local storage or default to light
-            var storedTheme = readStoredTheme();
-            var initialTheme = storedTheme || 'light'; // Default to 'light' if no stored theme
+            // Function to set the theme and update logo
+            function setTheme(theme) {
+                htmlElement.setAttribute('data-bs-theme', theme);
+                writeStoredTheme(theme);
+                updateThemeIcon(theme);
+                updateLogo(theme); // Call updateLogo when theme changes
+            }
 
-            // Set the initial theme and update logo
-            setTheme(initialTheme); // This will now also call updateLogo
+            function toggleTheme() {
+                var currentTheme = htmlElement.getAttribute('data-bs-theme');
+                var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
+            }
 
-            // Add event listener to the button
-            if (themeToggle) { // Check if the button exists
-                themeToggle.addEventListener('click', function () {
-                    var currentTheme = htmlElement.getAttribute('data-bs-theme');
-                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    setTheme(newTheme);
+            // Delegated click: a single listener on document, so the
+            // toggle works regardless of when #theme-toggle appears.
+            document.addEventListener('click', function (e) {
+                var target = e.target;
+                var btn = target && target.closest ? target.closest('#theme-toggle') : null;
+                if (btn) {
+                    toggleTheme();
+                }
+            });
+
+            // Apply the stored (or default light) theme right away, and
+            // again once the document is ready, in case this script ran
+            // before the button was parsed.
+            setTheme(readStoredTheme() || 'light');
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () {
+                    setTheme(readStoredTheme() || 'light');
                 });
             }
         })();

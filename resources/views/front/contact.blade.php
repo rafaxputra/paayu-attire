@@ -8,7 +8,7 @@
             <i class="bi bi-arrow-left fs-4"></i>
         </a>
         <p class="h5 mb-0 fw-semibold">Contact Us</p>
-        <button id="theme-toggle" class="btn p-0">
+        <button type="button" id="theme-toggle" class="btn p-0">
             <i class="bi bi-moon fs-4"></i>
         </button>
     </div>
@@ -76,7 +76,7 @@
                         <p class="mb-2 text-muted">{{ $comment->comment }}</p>
                         @if ($comment->image)
                             <div class="mt-2">
-                                <img src="{{ '/storage/' . $comment->image }}" alt="Comment Image" class="img-fluid rounded" style="max-width: 150px;">
+                                <img src="{{ '/storage/' . $comment->image }}" alt="Comment Image" class="img-fluid rounded" style="max-width: 150px;" loading="lazy" decoding="async">
                             </div>
                         @endif
                     </div>

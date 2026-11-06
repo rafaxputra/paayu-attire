@@ -13,4 +13,17 @@ document.addEventListener('DOMContentLoaded', function () {
             slidesPerView: 'auto',
         });
     }
+
+    // Stop the shimmer placeholder on each product card once its image
+    // has loaded, so the loading state ends instead of shimmering forever
+    // underneath the photo.
+    document.querySelectorAll('.card-img-top').forEach(function (img) {
+        if (img.complete && img.naturalWidth > 0) {
+            img.classList.add('img-loaded');
+        } else {
+            img.addEventListener('load', function () {
+                img.classList.add('img-loaded');
+            });
+        }
+    });
 });

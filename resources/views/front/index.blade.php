@@ -9,7 +9,7 @@
             <img id="paayu-logo" src="/assets/images/logos/paayu_light_mode.png" alt="Paayu Attire Logo" style="height: 30px;" />
         </a>
         <div class="d-flex align-items-center gap-3">
-            <button id="theme-toggle" class="btn p-0">
+            <button type="button" id="theme-toggle" class="btn p-0">
                 <i class="bi bi-moon fs-4"></i>
             </button>
             @auth
@@ -72,7 +72,7 @@
             @forelse ($products as $product)
                 <div class="col">
                     <a href="{{ route('front.details', $product->slug) }}" class="card text-decoration-none h-100">
-                        <img src="{{ Storage::url($product->thumbnail) }}" class="card-img-top" alt="thumbnail" />
+                        <img src="{{ Storage::url($product->thumbnail) }}" class="card-img-top" alt="thumbnail" loading="lazy" decoding="async" />
                         <div class="card-body p-3 d-flex flex-column">
                             <h3 class="card-title h6 fw-bold product-card-title">{{ $product->name }}</h3>
                             @if($product->productSizes->count() > 0)

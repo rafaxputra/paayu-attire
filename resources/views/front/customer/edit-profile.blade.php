@@ -8,7 +8,7 @@
             <i class="bi bi-arrow-left fs-4"></i>
         </a>
         <p class="h5 mb-0 fw-semibold">Edit Profile</p>
-        <button id="theme-toggle" class="btn p-0">
+        <button type="button" id="theme-toggle" class="btn p-0">
             <i class="bi bi-moon fs-4"></i>
         </button>
     </div>

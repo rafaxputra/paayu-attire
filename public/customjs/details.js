@@ -36,6 +36,15 @@
 		var currentIndex = 0;
 		var zoom = 1;
 
+		// Stop the shimmer placeholder once the main image has loaded.
+		if (mainThumbnail.complete && mainThumbnail.naturalWidth > 0) {
+			mainThumbnail.classList.add("img-loaded");
+		} else {
+			mainThumbnail.addEventListener("load", function () {
+				mainThumbnail.classList.add("img-loaded");
+			});
+		}
+
 		function setZoom(value) {
 			zoom = Math.min(2.5, Math.max(1, value));
 			if (lightboxImage) {
@@ -112,6 +121,52 @@
 				setZoom(zoom > 1 ? 1 : 2);
 			});
 		}
+
+		// Swipe left/right on the main image (and inside the lightbox)
+		// to browse photos, the way phone users expect a gallery to work.
+		// A swipe must not also trigger the lightbox open, so the click
+		// right after a swipe is swallowed in the capture phase, before
+		// Bootstrap's delegated click handler on document sees it.
+		var justSwiped = false;
+		function addSwipe(el, onSwipeLeft, onSwipeRight) {
+			if (!el) {
+				return;
+			}
+			var startX = null;
+			var startY = null;
+			el.addEventListener("touchstart", function (e) {
+				var t = e.changedTouches[0];
+				startX = t.clientX;
+				startY = t.clientY;
+			}, { passive: true });
+			el.addEventListener("touchend", function (e) {
+				if (startX === null) {
+					return;
+				}
+				var t = e.changedTouches[0];
+				var dx = t.clientX - startX;
+				var dy = t.clientY - startY;
+				startX = null;
+				startY = null;
+				if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+					justSwiped = true;
+					setTimeout(function () { justSwiped = false; }, 300);
+					if (dx < 0) {
+						onSwipeLeft();
+					} else {
+						onSwipeRight();
+					}
+				}
+			}, { passive: true });
+		}
+		addSwipe(mainThumbnail, function () { showImage(currentIndex + 1); }, function () { showImage(currentIndex - 1); });
+		addSwipe(lightboxStage, function () { showImage(currentIndex + 1); }, function () { showImage(currentIndex - 1); });
+		mainThumbnail.addEventListener("click", function (e) {
+			if (justSwiped) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		}, true);
 
 		// Keyboard users: Enter / Space on the main image opens the lightbox.
 		mainThumbnail.addEventListener("keydown", function (e) {
