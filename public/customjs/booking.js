@@ -1,80 +1,52 @@
-// function to update price and total days
-const minus = document.getElementById("Minus");
-const plus = document.getElementById("Plus");
-const count = document.getElementById("CountDays");
-const durationInput = document.getElementById("DurationInput");
-const totalPrice = document.getElementById("Total");
+// Booking page: +/- duration stepper + live total price.
+//
+// Removed: openPage() tab switching and toggleAddressField() — they
+// targeted .tabcontent / .tablink / #delivery_type / #address-field,
+// none of which exist on this page, so toggleAddressField() threw
+// "Cannot read properties of null" on every booking-page load.
+// The price stepper below is guarded too, so a missing element can no
+// longer kill the whole script.
+(function () {
+    var minus = document.getElementById("Minus");
+    var plus = document.getElementById("Plus");
+    var count = document.getElementById("CountDays");
+    var durationInput = document.getElementById("DurationInput");
+    var totalPrice = document.getElementById("Total");
+    var productPrice = document.getElementById("productPrice");
 
-const productPrice = document.getElementById("productPrice");
+    if (!minus || !plus || !count || !durationInput || !totalPrice || !productPrice) {
+        return;
+    }
 
-const defaultPrice = parseFloat(productPrice.value);
+    var defaultPrice = parseFloat(productPrice.value);
 
-function updateTotalPrice() {
-    let subTotal = parseInt(durationInput.value) * defaultPrice;
-    totalPrice.innerText = "Rp " + subTotal.toLocaleString("id-ID");
-}
+    function updateTotalPrice() {
+        var subTotal = parseInt(durationInput.value, 10) * defaultPrice;
+        totalPrice.innerText = "Rp " + subTotal.toLocaleString("id-ID");
+    }
 
-minus.addEventListener("click", function () {
-    let currentCount = parseInt(count.innerText);
-    if (currentCount > 1) {
-        currentCount -= 1;
+    minus.addEventListener("click", function () {
+        var currentCount = parseInt(count.innerText, 10);
+        if (currentCount > 1) {
+            currentCount -= 1;
+            count.innerText = currentCount;
+            durationInput.value = currentCount;
+            updateTotalPrice();
+        }
+    });
+
+    plus.addEventListener("click", function () {
+        var currentCount = parseInt(count.innerText, 10);
+        currentCount += 1;
         count.innerText = currentCount;
         durationInput.value = currentCount;
         updateTotalPrice();
-    }
-});
+    });
 
-plus.addEventListener("click", function () {
-    let currentCount = parseInt(count.innerText);
-    currentCount += 1;
-    count.innerText = currentCount;
-    durationInput.value = currentCount;
+    durationInput.addEventListener("input", function () {
+        count.innerText = durationInput.value;
+        updateTotalPrice();
+    });
+
     updateTotalPrice();
-});
-
-durationInput.addEventListener("input", function () {
-    count.innerText = durationInput.value;
-    updateTotalPrice();
-});
-
-updateTotalPrice();
-
-// funtion nav & tabs like bootstrap
-document.addEventListener("DOMContentLoaded", function () {
-    window.openPage = function (pageName, elmnt) {
-        let i, tabcontent, tablinks;
-
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].classList.add("hidden");
-        }
-
-        tablinks = document.getElementsByClassName("tablink");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].classList.remove("active", "ring-2", "ring-[#FCCF2F]");
-        }
-
-        document.getElementById(pageName).classList.remove("hidden");
-        elmnt.classList.add("active", "ring-2", "ring-[#FCCF2F]");
-    };
-
-    toggleAddressField();
-});
-
-// Function to toggle delivery address field based on select value
-function toggleAddressField() {
-    const deliveryTypeSelect = document.getElementById("delivery_type");
-    const addressFieldDiv = document.getElementById("address-field");
-    const addressTextarea = document.getElementById("address");
-
-    if (deliveryTypeSelect.value === "delivery") {
-        addressFieldDiv.classList.remove("d-none"); // Show the div
-        addressFieldDiv.classList.add("d-flex"); // Ensure it's a flex container
-        addressTextarea.setAttribute('required', 'required');
-    } else {
-        addressFieldDiv.classList.add("d-none"); // Hide the div
-        addressFieldDiv.classList.remove("d-flex"); // Remove flex class when hidden
-        addressTextarea.removeAttribute('required');
-        addressTextarea.value = "";
-    }
-}
+})();

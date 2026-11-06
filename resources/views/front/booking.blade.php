@@ -1,10 +1,6 @@
 @extends('front.layouts.app')
 @section('title', 'Booking')
 
-@push('after-styles')
-    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
-@endpush
-
 @section('content')
 <main class="main-content-container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 px-3">

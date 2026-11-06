@@ -1,10 +1,6 @@
 @extends('front.layouts.app')
 @section('title', 'Checkout')
 
-@push('after-styles')
-    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
-@endpush
-
 @section('content')
 <main class="main-content-container py-3">
     <div class="d-flex justify-content-between align-items-center mb-4 px-3 pt-3">
@@ -115,7 +111,7 @@
                          <div class="d-flex flex-column gap-2">
                             <label for="payment_proof" class="form-label mb-0">Upload Proof</label>
                             <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept=".jpg,.png" required>
-                            <small class="form-text text-muted">Accepted formats: JPG, PNG</small>
+                            <small id="payment-proof-filename" class="form-text text-muted">Accepted formats: JPG, PNG</small>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="confirm_payment" id="confirm_payment" required>

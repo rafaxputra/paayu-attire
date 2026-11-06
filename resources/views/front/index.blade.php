@@ -1,10 +1,6 @@
 @extends('front.layouts.app')
 @section('title', 'Paayu Attire')
 
-@push('after-styles')
-<link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
-@endpush
-
 @section('content')
 
 <main class="main-content-container py-4">
@@ -103,6 +99,5 @@
 @endsection
 
 @push('after-scripts')
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script src="/customjs/browse.js"></script>
 @endpush

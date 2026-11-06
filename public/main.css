@@ -332,3 +332,28 @@ html[data-bs-theme="dark"] .btn-close {
 .contact-card:hover i {
     transform: scale(1.1);
 }
+
+/* 6. Utility classes used by custom JS (Tailwind-style names)
+ *
+ * No Tailwind build is loaded on the front pages (resources/css/app.css
+ * is empty and public/output.css is never linked), yet customjs relies
+ * on these class names: details.js fades the thumbnail with
+ * opacity-0/transition-opacity/duration-500, booking.js toggles
+ * hidden/ring-2/ring-[#FCCF2F], checkout.js adds font-semibold, and
+ * checkout.blade.php uses rounded-md. Without these definitions the
+ * classes were no-ops, so the thumbnail switched abruptly and the tab
+ * ring never appeared. Defined here in plain CSS instead of loading
+ * the whole Tailwind preflight, which would fight Bootstrap. */
+.hidden { display: none !important; }
+.opacity-0 { opacity: 0; }
+.transition-opacity {
+    transition-property: opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+.duration-500 { transition-duration: 500ms; }
+.ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.font-semibold { font-weight: 600; }
+.rounded-md { border-radius: 0.375rem; }
+.ring-2 { box-shadow: 0 0 0 2px var(--tw-ring-color, #FCCF2F); }
+.ring-\[\#FCCF2F\] { --tw-ring-color: #FCCF2F; }

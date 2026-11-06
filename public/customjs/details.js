@@ -2,6 +2,10 @@ document.addEventListener("DOMContentLoaded", function () {
 	const mainThumbnail = document.getElementById("mainThumbnail");
 	const buttons = document.querySelectorAll(".thumbnail-button");
 
+	if (!mainThumbnail) {
+		return;
+	}
+
 	buttons.forEach((button) => {
 		button.addEventListener("click", function () {
 			const newSrc = this.querySelector("img").src;
