@@ -2,6 +2,10 @@
 @section('title', 'Check Booking')
 
 @section('content')
+{{-- Night-mode toggle: this was the only front page without one. --}}
+<button type="button" id="theme-toggle" class="btn p-0 position-absolute" style="top: 1.25rem; right: 1.25rem; z-index: 10;">
+    <i class="bi bi-moon fs-4"></i>
+</button>
 <main class="main-content-container py-4 text-center">
     <div class="vh-center-flex">
         <section id="CheckBook" class="d-flex flex-column gap-4 align-items-center w-100">
