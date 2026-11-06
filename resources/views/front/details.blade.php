@@ -36,13 +36,43 @@
         </div>
     </section>
 
-    {{-- Lightbox: tap the main image to see it enlarged. --}}
-    <div class="modal fade" id="imageLightbox" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content bg-transparent border-0">
-                <div class="modal-body p-0 position-relative">
-                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1;"></button>
-                    <img id="lightboxImage" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}" class="img-fluid w-100 rounded-3" style="max-height: 80vh; object-fit: contain;">
+    {{-- Lightbox premium: tap the main image to see it enlarged, browse
+         with arrows / thumbnails, and zoom in. The previous version used
+         a white modal with a white close button (btn-close-white), so the
+         close button was invisible. --}}
+    <div class="modal fade image-lightbox" id="imageLightbox" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="lightbox-header">
+                    <div>
+                        <p class="lightbox-title">{{ $product->name }}</p>
+                        <p class="lightbox-counter"><span id="lightboxCounter">1</span> / {{ 1 + $product->photos->count() }}</p>
+                    </div>
+                    <button type="button" class="lightbox-close" data-bs-dismiss="modal" aria-label="Tutup">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="lightbox-stage" id="lightboxStage">
+                    <img id="lightboxImage" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}">
+                    <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Gambar sebelumnya">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button type="button" class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Gambar berikutnya">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="lightbox-footer">
+                    <div class="lightbox-thumbs">
+                        <img src="{{ Storage::url($product->thumbnail) }}" class="lightbox-thumb active" data-index="0" alt="Gambar utama">
+                        @foreach ($product->photos as $photo)
+                        <img src="{{ Storage::url($photo->photo) }}" class="lightbox-thumb" data-index="{{ $loop->iteration }}" alt="Gambar {{ $loop->iteration + 1 }}">
+                        @endforeach
+                    </div>
+                    <div class="lightbox-zoom">
+                        <button type="button" id="lightboxZoomOut" aria-label="Perkecil"><i class="bi bi-dash-lg"></i></button>
+                        <button type="button" id="lightboxZoomIn" aria-label="Perbesar"><i class="bi bi-plus-lg"></i></button>
+                        <button type="button" id="lightboxZoomReset" aria-label="Reset zoom"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    </div>
                 </div>
             </div>
         </div>

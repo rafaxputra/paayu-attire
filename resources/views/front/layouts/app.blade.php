@@ -21,14 +21,33 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const themeToggle = document.getElementById('theme-toggle');
-            const htmlElement = document.documentElement; // Target the html element
-            const paayuLogo = document.getElementById('paayu-logo'); // Get the logo element
+        // Night-mode toggle.
+        //
+        // Runs immediately instead of waiting for DOMContentLoaded: this
+        // script sits after @yield('content'), so #theme-toggle already
+        // exists, and waiting for DOMContentLoaded proved fragile — on
+        // the forwarded site the toggle stopped working entirely (the
+        // click listener was never attached). Storage access is guarded:
+        // if localStorage is unavailable/blocked, a throw used to kill
+        // this whole script before the listener was attached; now the
+        // toggle keeps working in-memory and just doesn't remember the
+        // choice.
+        (function () {
+            var themeToggle = document.getElementById('theme-toggle');
+            var htmlElement = document.documentElement; // Target the html element
+            var paayuLogo = document.getElementById('paayu-logo'); // Get the logo element
 
             // Define logo paths
-            const lightModeLogoPath = "/assets/images/logos/paayu_light_mode.png";
-            const darkModeLogoPath = "/assets/images/logos/paayu_dark_mode.png";
+            var lightModeLogoPath = "/assets/images/logos/paayu_light_mode.png";
+            var darkModeLogoPath = "/assets/images/logos/paayu_dark_mode.png";
+
+            function readStoredTheme() {
+                try { return localStorage.getItem('theme'); } catch (e) { return null; }
+            }
+
+            function writeStoredTheme(theme) {
+                try { localStorage.setItem('theme', theme); } catch (e) { /* storage unavailable: keep in-memory only */ }
+            }
 
             // Function to update the logo based on theme
             function updateLogo(theme) {
@@ -44,7 +63,7 @@
             // Function to set the theme and update logo
             function setTheme(theme) {
                 htmlElement.setAttribute('data-bs-theme', theme);
-                localStorage.setItem('theme', theme);
+                writeStoredTheme(theme);
                 updateThemeIcon(theme);
                 updateLogo(theme); // Call updateLogo when theme changes
             }
@@ -52,7 +71,7 @@
             // Function to update the icon
             function updateThemeIcon(theme) {
                 if (themeToggle) { // Check if the button exists
-                    const icon = themeToggle.querySelector('i');
+                    var icon = themeToggle.querySelector('i');
                     if (icon) { // Check if icon element exists
                         if (theme === 'dark') {
                             icon.classList.remove('bi-moon');
@@ -66,8 +85,8 @@
             }
 
             // Get the preferred theme from local storage or default to light
-            const storedTheme = localStorage.getItem('theme');
-            const initialTheme = storedTheme || 'light'; // Default to 'light' if no stored theme
+            var storedTheme = readStoredTheme();
+            var initialTheme = storedTheme || 'light'; // Default to 'light' if no stored theme
 
             // Set the initial theme and update logo
             setTheme(initialTheme); // This will now also call updateLogo
@@ -75,12 +94,12 @@
             // Add event listener to the button
             if (themeToggle) { // Check if the button exists
                 themeToggle.addEventListener('click', function () {
-                    const currentTheme = htmlElement.getAttribute('data-bs-theme');
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    var currentTheme = htmlElement.getAttribute('data-bs-theme');
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                     setTheme(newTheme);
                 });
             }
-        });
+        })();
     </script>
 
     @stack('after-scripts')
