@@ -35,7 +35,7 @@ class UserResource extends Resource
                     ->label('Phone Number')
                     ->numeric() // Restrict input to numbers
                     ->maxLength(255)
-                    ->helperText('Hanya bisa diisi dengan nomor/angka.'), // Add helper text
+                    ->helperText('Numbers only.'), // Add helper text
                 Forms\Components\Select::make('role')
                     ->options([
                         'admin' => 'Admin',

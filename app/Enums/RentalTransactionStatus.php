@@ -17,15 +17,15 @@ case CANCELLED = 'cancelled'; // User cancelled the booking
 public function getLabel(): ?string
 {
     return match ($this) {
-        self::PENDING_PAYMENT_VERIFICATION => 'Menunggu Verifikasi Pembayaran',
-        self::PAYMENT_VALIDATED => 'Pembayaran Terverifikasi',
-        self::PAYMENT_FAILED => 'Pembayaran Gagal/Tidak Valid',
-        self::READY_FOR_PICKUP => 'Siap Diambil',
-        self::IN_RENTAL => 'Dalam Penyewaan',
-        self::COMPLETED => 'Selesai',
-        self::LATE_RETURNED => 'Terlambat Dikembalikan',
-        self::REJECTED => 'Ditolak',
-        self::CANCELLED => 'Dibatalkan',
+        self::PENDING_PAYMENT_VERIFICATION => 'Pending Payment Verification',
+        self::PAYMENT_VALIDATED => 'Payment Validated',
+        self::PAYMENT_FAILED => 'Payment Failed',
+        self::READY_FOR_PICKUP => 'Ready for Pickup',
+        self::IN_RENTAL => 'In Rental',
+        self::COMPLETED => 'Completed',
+        self::LATE_RETURNED => 'Returned Late',
+        self::REJECTED => 'Rejected',
+        self::CANCELLED => 'Cancelled',
     };
 }
 

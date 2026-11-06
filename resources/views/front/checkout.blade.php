@@ -49,7 +49,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="fw-bold mb-0">{{ $product->name }}</p>
-                            <span class="badge bg-secondary mt-2">Ukuran yang dipilih: {{ $selectedSize }}</span>
+                            <span class="badge bg-secondary mt-2">Selected size: {{ $selectedSize }}</span>
                         </div>
                     </div>
                 </div>
@@ -85,11 +85,11 @@
                         <p class="mb-0 small">Please transfer to one of the following accounts:</p>
                         <div>
                             <p class="fw-semibold mb-0">Bank BCA:</p>
-                            <p class="mb-0">5545011970 a/n Niken Alfinanda Putri</p>
+                            <p class="mb-0">5545011970 (Niken Alfinanda Putri)</p>
                         </div>
                         <div>
                             <p class="fw-semibold mb-0">Bank BRI:</p>
-                            <p class="mb-0">626801015467534 a/n Niken Alfinanda Putri</p>
+                            <p class="mb-0">626801015467534 (Niken Alfinanda Putri)</p>
                         </div>
                         <div class="d-flex flex-column gap-2">
                             <label for="payment_method" class="form-label mb-0">Payment Method</label>

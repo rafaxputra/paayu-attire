@@ -27,7 +27,7 @@
                         @if ($transaction->product)
                         <img src="{{ Storage::url($transaction->product->thumbnail) }}" alt="Thumbnail" class="img-fluid rounded-3 mx-auto" style="max-height: 150px; object-fit: contain;" />
                         @endif
-                        <p class="fw-bold fs-5 mt-2 mb-0">{{ $transaction->product->name ?? 'Produk tidak tersedia' }}</p>
+                        <p class="fw-bold fs-5 mt-2 mb-0">{{ $transaction->product->name ?? 'Product unavailable' }}</p>
                     </div>
 
                     <div class="card p-3">
@@ -97,7 +97,7 @@ function copyBookingId() {
         // http (localhost) it is undefined and the old code failed
         // silently. Show the failure on the button instead.
         copyBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
-        copyBtn.title = 'Gagal menyalin otomatis — salin manual dari teks di atas.';
+        copyBtn.title = 'Automatic copy failed — please copy it manually from the text above.';
         setTimeout(() => {
             copyBtn.innerHTML = originalIcon;
             copyBtn.removeAttribute('title');

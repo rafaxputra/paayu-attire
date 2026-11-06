@@ -25,15 +25,15 @@
             <img id="mainThumbnail" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}"
                  class="transition-opacity duration-500 ease-in-out"
                  role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#imageLightbox"
-                 aria-label="Perbesar gambar" style="cursor: zoom-in;"
+                 aria-label="Enlarge image" style="cursor: zoom-in;"
                  fetchpriority="high" decoding="async" />
         </div>
         <div class="d-flex gap-3 justify-content-center mt-3">
-            <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0 thumbnail-active-ring" style="width: 70px; height: 70px;" aria-label="Lihat gambar utama">
+            <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0 thumbnail-active-ring" style="width: 70px; height: 70px;" aria-label="View main image">
                 <img src="{{ Storage::url($product->thumbnail) }}" alt="Thumbnail" class="rounded-circle object-fit-cover" style="width: 100%; height: 100%;" loading="lazy" decoding="async" />
             </button>
             @forelse ($product->photos as $photo)
-            <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 70px; height: 70px;" aria-label="Lihat gambar {{ $loop->iteration + 1 }}">
+            <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 70px; height: 70px;" aria-label="View image {{ $loop->iteration + 1 }}">
                 <img src="{{ Storage::url($photo->photo) }}" alt="Thumbnail" class="img-fluid rounded-circle object-fit-cover" style="width: 100%; height: 100%;" loading="lazy" decoding="async" />
             </button>
             @empty
@@ -53,16 +53,16 @@
                         <p class="lightbox-title">{{ $product->name }}</p>
                         <p class="lightbox-counter"><span id="lightboxCounter">1</span> / {{ 1 + $product->photos->count() }}</p>
                     </div>
-                    <button type="button" class="lightbox-close" data-bs-dismiss="modal" aria-label="Tutup">
+                    <button type="button" class="lightbox-close" data-bs-dismiss="modal" aria-label="Close">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
                 <div class="lightbox-stage" id="lightboxStage">
                     <img id="lightboxImage" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}">
-                    <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Gambar sebelumnya">
+                    <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Previous image">
                         <i class="bi bi-chevron-left"></i>
                     </button>
-                    <button type="button" class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Gambar berikutnya">
+                    <button type="button" class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Next image">
                         <i class="bi bi-chevron-right"></i>
                     </button>
                 </div>
@@ -74,8 +74,8 @@
                         @endforeach
                     </div>
                     <div class="lightbox-zoom">
-                        <button type="button" id="lightboxZoomOut" aria-label="Perkecil"><i class="bi bi-dash-lg"></i></button>
-                        <button type="button" id="lightboxZoomIn" aria-label="Perbesar"><i class="bi bi-plus-lg"></i></button>
+                        <button type="button" id="lightboxZoomOut" aria-label="Zoom out"><i class="bi bi-dash-lg"></i></button>
+                        <button type="button" id="lightboxZoomIn" aria-label="Zoom in"><i class="bi bi-plus-lg"></i></button>
                         <button type="button" id="lightboxZoomReset" aria-label="Reset zoom"><i class="bi bi-arrow-counterclockwise"></i></button>
                     </div>
                 </div>
@@ -125,11 +125,11 @@
                             <thead>
                                 <tr>
                                     <th class="align-middle">Size</th>
-                                    <th class="align-middle">Lebar Bahu Belakang</th>
-                                    <th class="align-middle">Lingkar Panggul</th>
-                                    <th class="align-middle">Lingkar Pinggul</th>
-                                    <th class="align-middle">Lingkar Dada</th>
-                                    <th class="align-middle">Kerung Lengan</th>
+                                    <th class="align-middle">Back Shoulder Width</th>
+                                    <th class="align-middle">Hip Circumference</th>
+                                    <th class="align-middle">Waist Circumference</th>
+                                    <th class="align-middle">Bust Circumference</th>
+                                    <th class="align-middle">Armhole Circumference</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,7 +176,7 @@
                     $allOutOfStock = $noSizes || $product->productSizes->every(fn($size) => $size->stock == 0);
                 @endphp
                 @if($allOutOfStock)
-                    <button class="btn btn-secondary d-flex align-items-center gap-2" disabled><i class="bi bi-cart-x"></i> {{ $noSizes ? 'Belum tersedia' : 'Semua stok sedang habis' }}</button>
+                    <button class="btn btn-secondary d-flex align-items-center gap-2" disabled><i class="bi bi-cart-x"></i> {{ $noSizes ? 'Not available yet' : 'All stock is currently unavailable' }}</button>
                 @else
                     <a href="{{ route('front.booking', $product->slug) }}" class="btn btn-primary d-flex align-items-center gap-2"><i class="bi bi-cart-plus"></i> Rent Now</a>
                 @endif

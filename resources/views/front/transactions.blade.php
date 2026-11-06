@@ -53,7 +53,7 @@
             <div class="d-flex flex-column align-items-center">
                 <i class="bi bi-exclamation-circle text-warning mb-2" style="font-size:2.5rem;"></i>
                 <p class="mb-2" style="font-weight:600;">{{ $errors->first('error') }}</p>
-                <button id="close-popup-btn" class="btn btn-primary mt-2">Tutup</button>
+                <button id="close-popup-btn" class="btn btn-primary mt-2">Close</button>
             </div>
         </div>
     </div>

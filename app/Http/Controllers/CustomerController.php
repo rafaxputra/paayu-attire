@@ -73,7 +73,7 @@ class CustomerController extends Controller
         $user->save();
 
         // Redirect ke edit profile dengan pesan wajib ganti password
-        return redirect()->route('front.customer.editProfile')->with('info', 'Akun Google berhasil di-unlink. Anda harus mengganti password sebelum bisa login ulang.');
+        return redirect()->route('front.customer.editProfile')->with('info', 'Google account unlinked successfully. You must set a password before you can log in again.');
     }
 
     public function showSetPasswordForm()

@@ -88,7 +88,7 @@ function copyOrderId() {
         // http (localhost) it is undefined and the old code failed
         // silently. Show the failure on the button instead.
         copyBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
-        copyBtn.title = 'Gagal menyalin otomatis — salin manual dari teks di atas.';
+        copyBtn.title = 'Automatic copy failed — please copy it manually from the text above.';
         setTimeout(() => {
             copyBtn.innerHTML = originalIcon;
             copyBtn.removeAttribute('title');

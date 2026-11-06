@@ -102,8 +102,8 @@ class FrontController extends Controller
         $subTotal = $product->price * $duration;
         $grandTotal = $subTotal;
         $bankAccounts = [
-            'BCA' => '5545011970 a/n Niken Alfinanda Putri',
-            'BRI' => '626801015467534 a/n Niken Alfinanda Putri',
+            'BCA' => '5545011970 (Niken Alfinanda Putri)',
+            'BRI' => '626801015467534 (Niken Alfinanda Putri)',
         ];
         return view('front.checkout', compact('product', 'selectedSize', 'duration', 'startedDate', 'endedDate', 'name', 'phoneNumber', 'subTotal', 'grandTotal', 'bankAccounts'));
     }
@@ -256,6 +256,16 @@ class FrontController extends Controller
             'kebaya_preference' => ['required', 'string'],
             'amount_to_buy' => ['required', 'integer', 'min:1', 'max:15'],
             'date_needed' => ['required', 'date', 'after_or_equal:today'],
+        ], [], [
+            // Friendly English names for the validation errors: without
+            // these, a failed custom-size field shows its Indonesian
+            // column name (e.g. "The lebar bahu belakang field ...").
+            'lebar_bahu_belakang' => 'back shoulder width',
+            'lingkar_panggul' => 'hip circumference',
+            'lingkar_pinggul' => 'waist circumference',
+            'lingkar_dada' => 'bust circumference',
+            'kerung_lengan' => 'armhole circumference',
+            'size_chart_option' => 'size',
         ]);
 
         $validatedData = $request->only([
@@ -531,6 +541,6 @@ class FrontController extends Controller
             'comment' => $request->comment,
             'image' => $imagePath,
         ]);
-        return back()->with('success', 'Komentar berhasil dikirim!');
+        return back()->with('success', 'Comment submitted successfully!');
     }
 }

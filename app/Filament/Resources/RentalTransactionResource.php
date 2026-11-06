@@ -87,15 +87,15 @@ class RentalTransactionResource extends Resource
                     ->disabled(),
                 Forms\Components\TextInput::make('late_days')
                     ->numeric()
-                    ->label('Terlambat (hari)')
+                    ->label('Late (days)')
                     ->nullable()
-                    ->helperText('Jika status late_returned, sistem otomatis menghitung denda berdasarkan hari ini dan ended_at. Bisa diubah manual.'),
+                    ->helperText('If the status is late_returned, the system automatically calculates the fee based on today and ended_at. Can be changed manually.'),
                 Forms\Components\TextInput::make('late_fee')
                     ->numeric()
                     ->prefix('IDR')
-                    ->label('Total Denda')
+                    ->label('Total Late Fee')
                     ->nullable()
-                    ->helperText('Denda dihitung otomatis: 20% x total_amount x late_days. Bisa diubah manual.'),
+                    ->helperText('Fee is calculated automatically: 20% x total_amount x late_days. Can be changed manually.'),
             ]);
     }
 
@@ -148,10 +148,10 @@ class RentalTransactionResource extends Resource
                     ->label('Selected Size')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('late_days')
-                    ->label('Terlambat (hari)')
+                    ->label('Late (days)')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('late_fee')
-                    ->label('Total Denda')
+                    ->label('Total Late Fee')
                     ->money('IDR')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

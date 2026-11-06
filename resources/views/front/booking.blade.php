@@ -29,7 +29,7 @@
 
     <div class="d-flex flex-column gap-3 px-3 mb-4">
         <h2 class="h5 mb-0 fw-semibold d-flex align-items-center gap-2"><i class="bi bi-info-circle"></i> Details</h2>
-        <p class="text-muted mb-0">Silahkan tuliskan detail booking dengan teliti untuk menghindari kesalahan biaya sewa barang.</p>
+        <p class="text-muted mb-0">Please fill in your booking details carefully to avoid mistakes in the rental fee.</p>
     </div>
 
     @if ($errors->any())
@@ -71,9 +71,9 @@
         </div>
 
         <div class="card p-3 d-flex flex-column gap-2">
-            <label for="selected_size" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-arrows-fullscreen"></i> Pilih Size</label>
+            <label for="selected_size" class="form-label fw-semibold mb-0 d-flex align-items-center gap-2"><i class="bi bi-arrows-fullscreen"></i> Choose Size</label>
             <select name="selected_size" id="selected_size" class="form-select" required>
-                <option value="">Pilih Size</option>
+                <option value="">Choose Size</option>
                 @foreach($product->productSizes as $productSize)
                     <option value="{{ $productSize->size }}" @if($productSize->stock == 0) disabled @endif>
                         {{ $productSize->size }} @if($productSize->stock == 0) (Out of Stock) @else (Stock: {{ $productSize->stock }}) @endif
@@ -98,7 +98,7 @@
     <div class="container main-content-container">
         <div class="d-flex items-center justify-content-between p-3">
             <div class="d-flex flex-column gap-1">
-                <p class="mb-0 text-muted" style="font-size: 0.9rem;">Total Harga</p>
+                <p class="mb-0 text-muted" style="font-size: 0.9rem;">Total Price</p>
                 <p id="Total" class="fw-bold fs-5 mb-0">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
             </div>
             <button type="submit" form="booking-form" class="btn btn-primary">Checkout</button>

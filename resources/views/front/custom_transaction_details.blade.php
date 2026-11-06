@@ -94,7 +94,7 @@
             // Status Card Logic
             $statusInfo = match ($details->status) {
                 \App\Enums\CustomTransactionStatus::PENDING => ['text' => 'Pending Verification', 'icon' => 'bi-hourglass-split', 'class' => 'bg-warning'],
-                \App\Enums\CustomTransactionStatus::REJECTED => ['text' => 'Pesanan Ditolak', 'icon' => 'bi-x-circle', 'class' => 'bg-danger'],
+                \App\Enums\CustomTransactionStatus::REJECTED => ['text' => 'Order Rejected', 'icon' => 'bi-x-circle', 'class' => 'bg-danger'],
                 \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION => ['text' => 'Pending Payment Verification', 'icon' => 'bi-cash-coin', 'class' => 'bg-info'],
                 \App\Enums\CustomTransactionStatus::PAYMENT_FAILED => ['text' => 'Payment Failed', 'icon' => 'bi-x-circle', 'class' => 'bg-danger'],
                 \App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED => ['text' => 'Payment Validated', 'icon' => 'bi-check-circle', 'class' => 'bg-success'],
@@ -103,14 +103,14 @@
                 \App\Enums\CustomTransactionStatus::CANCELLED => ['text' => 'Cancelled', 'icon' => 'bi-slash-circle', 'class' => 'bg-secondary'],
             };
             $additionalMessage = match ($details->status) {
-                 \App\Enums\CustomTransactionStatus::PENDING => 'Pesanan custom Anda sedang menunggu verifikasi dan estimasi harga dari admin. Mohon tunggu pemberitahuan selanjutnya.',
-                \App\Enums\CustomTransactionStatus::REJECTED => 'Maaf, pesanan custom Anda telah ditolak. Silakan hubungi layanan pelanggan untuk informasi lebih lanjut.',
-                \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION => 'Admin telah memberikan estimasi harga dan tanggal penyelesaian. Silakan lakukan pembayaran dan unggah bukti pembayaran.',
-                \App\Enums\CustomTransactionStatus::PAYMENT_FAILED => 'Bukti pembayaran Anda tidak valid atau pembayaran gagal. Mohon unggah ulang bukti pembayaran yang benar atau hubungi layanan pelanggan.',
-                \App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED => 'Pembayaran Anda sudah kami terima. Pesanan custom Anda akan segera diproses.',
-                \App\Enums\CustomTransactionStatus::IN_PROGRESS => 'Pesanan custom Anda sedang dalam proses pengerjaan. Kami akan memberitahu Anda jika sudah selesai.',
-                \App\Enums\CustomTransactionStatus::COMPLETED => 'Pesanan custom Anda telah selesai dan siap diambil. Anda dapat mengambil pesanan custom Anda di alamat yang tertera <a href="' . route('front.contact') . '" class="text-white text-decoration-underline">di sini</a>.',
-                \App\Enums\CustomTransactionStatus::CANCELLED => 'Pesanan custom Anda telah dibatalkan.',
+                 \App\Enums\CustomTransactionStatus::PENDING => 'Your custom order is awaiting verification and a price estimate from the admin. Please wait for further notice.',
+                \App\Enums\CustomTransactionStatus::REJECTED => 'Sorry, your custom order has been rejected. Please contact customer service for more information.',
+                \App\Enums\CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION => 'The admin has provided a price estimate and completion date. Please make the payment and upload your payment proof.',
+                \App\Enums\CustomTransactionStatus::PAYMENT_FAILED => 'Your payment proof is invalid or the payment failed. Please re-upload a valid payment proof or contact customer service.',
+                \App\Enums\CustomTransactionStatus::PAYMENT_VALIDATED => 'We have received your payment. Your custom order will be processed soon.',
+                \App\Enums\CustomTransactionStatus::IN_PROGRESS => 'Your custom order is currently being made. We will let you know once it is finished.',
+                \App\Enums\CustomTransactionStatus::COMPLETED => 'Your custom order is finished and ready for pickup. You can pick up your custom order at the address listed <a href="' . route('front.contact') . '" class="text-white text-decoration-underline">here</a>.',
+                \App\Enums\CustomTransactionStatus::CANCELLED => 'Your custom order has been cancelled.',
             };
         @endphp
         
@@ -127,9 +127,9 @@
                 <hr class="my-2 border-white opacity-25">
                 <form id="payment-upload-form" action="{{ route('front.custom.uploadPaymentProof', $details->id) }}" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-3">
                     @csrf
-                    <select name="payment_method" class="form-select" required><option value="">Pilih Bank</option><option value="BCA">BCA</option><option value="BRI">BRI</option></select>
+                    <select name="payment_method" class="form-select" required><option value="">Choose Bank</option><option value="BCA">BCA</option><option value="BRI">BRI</option></select>
                     <input type="file" name="payment_proof" class="form-control" accept=".jpg,.png" required>
-                    <div class="form-check text-start"><input class="form-check-input" type="checkbox" id="confirm_payment" name="confirm_payment" required><label class="form-check-label" for="confirm_payment">Saya benar telah transfer</label></div>
+                    <div class="form-check text-start"><input class="form-check-input" type="checkbox" id="confirm_payment" name="confirm_payment" required><label class="form-check-label" for="confirm_payment">I confirm that I have transferred the payment</label></div>
                     <div class="d-flex gap-2">
                         <button type="submit" form="payment-upload-form" class="btn btn-light w-100">Confirm Payment</button>
                         <button type="button" class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">Cancel</button>
@@ -171,11 +171,11 @@
                 <p class="mb-0"><strong class="fw-semibold">Color:</strong> {{ $details->color ?? '-' }}</p>
                 <p class="mb-0"><strong class="fw-semibold">Selected Size:</strong> {{ $details->selected_size_chart ?? '-' }}</p>
                 @if($details->selected_size_chart === 'custom')
-                    <p class="mb-0"><strong class="fw-semibold">Lebar Bahu:</strong> {{ $details->lebar_bahu_belakang }} cm</p>
-                    <p class="mb-0"><strong class="fw-semibold">Lingkar Panggul:</strong> {{ $details->lingkar_panggul }} cm</p>
-                    <p class="mb-0"><strong class="fw-semibold">Lingkar Pinggul:</strong> {{ $details->lingkar_pinggul }} cm</p>
-                    <p class="mb-0"><strong class="fw-semibold">Lingkar Dada:</strong> {{ $details->lingkar_dada }} cm</p>
-                    <p class="mb-0"><strong class="fw-semibold">Kerung Lengan:</strong> {{ $details->kerung_lengan }} cm</p>
+                    <p class="mb-0"><strong class="fw-semibold">Back Shoulder Width:</strong> {{ $details->lebar_bahu_belakang }} cm</p>
+                    <p class="mb-0"><strong class="fw-semibold">Hip Circumference:</strong> {{ $details->lingkar_panggul }} cm</p>
+                    <p class="mb-0"><strong class="fw-semibold">Waist Circumference:</strong> {{ $details->lingkar_pinggul }} cm</p>
+                    <p class="mb-0"><strong class="fw-semibold">Bust Circumference:</strong> {{ $details->lingkar_dada }} cm</p>
+                    <p class="mb-0"><strong class="fw-semibold">Armhole Circumference:</strong> {{ $details->kerung_lengan }} cm</p>
                 @endif
                 <p class="mb-0"><strong class="fw-semibold">Kebaya Preference:</strong> {{ $details->kebaya_preference }}</p>
                 <p class="mb-0"><strong class="fw-semibold">Quantity:</strong> {{ $details->amount_to_buy }}</p>
@@ -210,7 +210,7 @@
     <div id="Bottom-nav" class="fixed-bottom">
         <div class="container main-content-container">
             <div class="d-flex align-items-center justify-content-between p-3">
-                <a href="https://wa.me/6285183004324" class="btn btn-primary w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Hubungi Layanan Pelanggan</a>
+                <a href="https://wa.me/6285183004324" class="btn btn-primary w-100 text-center d-flex align-items-center justify-content-center gap-2"><i class="bi bi-whatsapp"></i> Contact Customer Service</a>
             </div>
         </div>
     </div>

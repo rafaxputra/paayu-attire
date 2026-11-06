@@ -21,7 +21,7 @@
                         @if(Auth::user()->role === 'admin')
                             <li><a class="dropdown-item" href="{{ route('filament.admin.pages.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Admin Dashboard</a></li>
                         @endif
-                        <li><a class="dropdown-item" href="{{ route('front.customer.dashboard') }}"><i class="bi bi-person-circle me-2"></i> Kelola Profil</a></li>
+                        <li><a class="dropdown-item" href="{{ route('front.customer.dashboard') }}"><i class="bi bi-person-circle me-2"></i> Manage Profile</a></li>
                         <li>
                             <form action="{{ route('logout') }}" method="POST" class="d-none" id="logout-form"> @csrf </form>
                             <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a>

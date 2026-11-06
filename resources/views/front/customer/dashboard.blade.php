@@ -74,7 +74,7 @@
                         <span class="badge rounded-pill bg-info-subtle text-info-emphasis">{{ $transaction->status->getLabel() }}</span>
                     </div>
                     <hr class="my-1">
-                    <p class="mb-0 small text-muted">Product: {{ $transaction->product->name ?? 'Produk tidak tersedia' }}</p>
+                    <p class="mb-0 small text-muted">Product: {{ $transaction->product->name ?? 'Product unavailable' }}</p>
                     <a href="{{ route('front.transactions.details', ['trx_id' => $transaction->trx_id, 'phone_number' => $transaction->phone_number]) }}" class="btn btn-sm btn-outline-secondary mt-2 align-self-end">View Details</a>
                 </div>
             @empty

@@ -85,11 +85,11 @@
                                 <thead>
                                     <tr>
                                         <th class="align-middle">Size</th>
-                                        <th class="align-middle">Lebar Bahu Belakang</th>
-                                        <th class="align-middle">Lingkar Panggul</th>
-                                        <th class="align-middle">Lingkar Pinggul</th>
-                                        <th class="align-middle">Lingkar Dada</th>
-                                        <th class="align-middle">Kerung Lengan</th>
+                                        <th class="align-middle">Back Shoulder Width</th>
+                                        <th class="align-middle">Hip Circumference</th>
+                                        <th class="align-middle">Waist Circumference</th>
+                                        <th class="align-middle">Bust Circumference</th>
+                                        <th class="align-middle">Armhole Circumference</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -103,11 +103,11 @@
                     </div>
                     <div class="d-flex flex-column gap-3 d-none" id="customSizeInputs">
                         <p class="fw-semibold mb-0">Enter Custom Measurements (cm)</p>
-                        <input type="number" name="lebar_bahu_belakang" class="form-control" placeholder="Lebar Bahu Belakang" min="0" step="any" value="{{ old('lebar_bahu_belakang') }}">
-                        <input type="number" name="lingkar_panggul" class="form-control" placeholder="Lingkar Panggul" min="0" step="any" value="{{ old('lingkar_panggul') }}">
-                        <input type="number" name="lingkar_pinggul" class="form-control" placeholder="Lingkar Pinggul" min="0" step="any" value="{{ old('lingkar_pinggul') }}">
-                        <input type="number" name="lingkar_dada" class="form-control" placeholder="Lingkar Dada" min="0" step="any" value="{{ old('lingkar_dada') }}">
-                        <input type="number" name="kerung_lengan" class="form-control" placeholder="Kerung Lengan" min="0" step="any" value="{{ old('kerung_lengan') }}">
+                        <input type="number" name="lebar_bahu_belakang" class="form-control" placeholder="Back Shoulder Width" min="0" step="any" value="{{ old('lebar_bahu_belakang') }}">
+                        <input type="number" name="lingkar_panggul" class="form-control" placeholder="Hip Circumference" min="0" step="any" value="{{ old('lingkar_panggul') }}">
+                        <input type="number" name="lingkar_pinggul" class="form-control" placeholder="Waist Circumference" min="0" step="any" value="{{ old('lingkar_pinggul') }}">
+                        <input type="number" name="lingkar_dada" class="form-control" placeholder="Bust Circumference" min="0" step="any" value="{{ old('lingkar_dada') }}">
+                        <input type="number" name="kerung_lengan" class="form-control" placeholder="Armhole Circumference" min="0" step="any" value="{{ old('kerung_lengan') }}">
                     </div>
                 </div>
             </div>

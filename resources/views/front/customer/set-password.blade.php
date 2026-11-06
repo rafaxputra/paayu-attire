@@ -17,7 +17,7 @@
         <section class="d-flex flex-column gap-4 w-100">
             <div class="d-flex flex-column gap-2 align-items-center text-center">
                 <h1 class="h4 fw-bold mb-2">Set Your Password</h1>
-                <p class="text-muted mb-0">Buat password agar kamu bisa login tanpa Google.</p>
+                <p class="text-muted mb-0">Create a password so you can log in without Google.</p>
             </div>
 
             @if (session('success'))
@@ -40,16 +40,16 @@
                 @csrf
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="password" class="form-label fw-semibold mb-0">Password Baru</label>
-                    <input type="password" name="password" id="password" class="form-control" placeholder="Minimal 8 karakter" minlength="8" required autofocus>
+                    <label for="password" class="form-label fw-semibold mb-0">New Password</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="At least 8 characters" minlength="8" required autofocus>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <label for="password_confirmation" class="form-label fw-semibold mb-0">Konfirmasi Password</label>
-                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Ketik ulang password barumu" minlength="8" required>
+                    <label for="password_confirmation" class="form-label fw-semibold mb-0">Confirm Password</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Re-enter your new password" minlength="8" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 mt-2"><i class="bi bi-check-circle"></i> Simpan Password</button>
+                <button type="submit" class="btn btn-primary w-100 mt-2"><i class="bi bi-check-circle"></i> Save Password</button>
             </form>
         </section>
     </div>
