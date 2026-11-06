@@ -92,6 +92,10 @@
                 <p class="px-3">No products found.</p>
             @endforelse
         </div>
+
+        <div class="d-flex justify-content-center mt-4">
+            {{ $products->links() }}
+        </div>
     </section>
 
     @include('front.components.bottom_navbar')

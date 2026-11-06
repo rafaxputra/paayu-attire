@@ -153,14 +153,16 @@
                             Saya benar telah transfer
                         </label>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-light w-100">Unggah Ulang & Kirim Ulang Pembayaran</button>
-                        <form action="{{ route('front.rental.cancel', $details->id) }}" method="POST" class="w-100">
-                            @csrf
-                            @method('PUT')
-                            <button type="submit" class="btn btn-outline-light w-100">Batalkan Pesanan</button>
-                        </form>
-                    </div>
+                    <button type="submit" class="btn btn-light w-100">Unggah Ulang & Kirim Ulang Pembayaran</button>
+                </form>
+                {{-- The cancel form must NOT be nested inside the re-upload
+                     form above: nested forms are invalid HTML and browsers
+                     drop the inner one, so "Batalkan Pesanan" submitted the
+                     re-upload form instead of cancelling. --}}
+                <form action="{{ route('front.rental.cancel', $details->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <button type="submit" class="btn btn-outline-light w-100">Batalkan Pesanan</button>
                 </form>
             </div>
         @endif

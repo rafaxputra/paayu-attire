@@ -46,6 +46,23 @@ class RentalTransaction extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Rental duration in days (ended_at - started_at).
+     *
+     * This accessor was missing, so every use of ->duration returned null:
+     * transactions_details() computed subTotal as price * null = 0, and the
+     * re-upload form on the transaction details page submitted an empty
+     * duration hidden input.
+     */
+    public function getDurationAttribute(): int
+    {
+        if (!$this->started_at || !$this->ended_at) {
+            return 0;
+        }
+
+        return $this->ended_at->diffInDays($this->started_at);
+    }
+
     public function getLateInfoAttribute()
     {
         if ($this->status === \App\Enums\RentalTransactionStatus::LATE_RETURNED) {

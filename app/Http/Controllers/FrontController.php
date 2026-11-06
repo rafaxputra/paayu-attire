@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Intervention\Image\Facades\Image;
 
 class FrontController extends Controller
@@ -43,13 +44,15 @@ class FrontController extends Controller
         } else {
             $query->latest();
         }
-        $products = $query->get();
+        // Paginate instead of loading every product at once; withQueryString()
+        // keeps the search / size / sort filters on the pagination links.
+        $products = $query->paginate(12)->withQueryString();
         return view('front.index', compact('products', 'availableSizes'));
     }
 
     public function details(Product $product)
     {
-        $product->load('productSizes');
+        $product->load(['productSizes', 'photos']);
         return view('front.details', compact('product'));
     }
 
@@ -81,7 +84,18 @@ class FrontController extends Controller
         $name = $request->query('name');
         $phoneNumber = $request->query('phone_number');
         $productSize = $product->productSizes()->where('size', $selectedSize)->first();
-        $startedDate = $startedAt ? Carbon::parse($startedAt) : now();
+        // The checkout page is reached via query string, so a tampered URL
+        // could carry duration 0 / negative or a size that does not exist.
+        // Send the user back to booking instead of showing a Rp 0 total.
+        if ($duration < 1 || !$productSize) {
+            return redirect()->route('front.booking', $product->slug)
+                ->withErrors(['error' => 'Invalid booking details. Please choose a size and duration again.']);
+        }
+        try {
+            $startedDate = $startedAt ? Carbon::parse($startedAt) : now();
+        } catch (\Exception $e) {
+            $startedDate = now();
+        }
         $endedDate = $startedDate->copy()->addDays($duration);
         $subTotal = $product->price * $duration;
         $grandTotal = $subTotal;
@@ -101,6 +115,11 @@ class FrontController extends Controller
         $endedDate = Carbon::parse($request->ended_at);
         $totalAmount = $product->price * $duration;
 
+        // Store + optimise the proof BEFORE touching the database, so a
+        // corrupt image fails before any order is created.
+        $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+        $this->optimizeUploadedImage($proofPath);
+
         // Cek apakah ini re-upload payment proof untuk transaksi yang sudah ada (PAYMENT_FAILED)
         $existing = RentalTransaction::where([
             'product_id' => $product->id,
@@ -112,9 +131,9 @@ class FrontController extends Controller
         ])->where('status', \App\Enums\RentalTransactionStatus::PAYMENT_FAILED)->first();
 
         if ($existing) {
-            $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
-            $fullProofPath = \Storage::disk('public')->path($proofPath);
-            \Intervention\Image\Facades\Image::make($fullProofPath)->save($fullProofPath, 80);
+            if ($existing->payment_proof) {
+                Storage::disk('public')->delete($existing->payment_proof);
+            }
             $existing->update([
                 'payment_proof' => $proofPath,
                 'payment_method' => $request->payment_method,
@@ -123,12 +142,16 @@ class FrontController extends Controller
             return redirect()->route('front.success.booking', $existing->trx_id);
         }
 
-        $productSize = $product->productSizes()->where('size', $selectedSize)->firstOrFail();
-        if ($productSize->stock <= 0) {
-            return back()->withErrors(['selected_size' => 'Selected size is out of stock.'])->withInput();
-        }
+        // Stock check + decrement happen inside one transaction with a row
+        // lock: previously the stock was checked outside the transaction,
+        // so two simultaneous checkouts for the last unit could both pass
+        // the check and oversell the size.
         $rentalTransaction = null;
-        \DB::transaction(function () use ($request, $product, $selectedSize, $duration, $startedDate, $endedDate, $totalAmount, &$rentalTransaction, $productSize) {
+        DB::transaction(function () use ($request, $product, $selectedSize, $startedDate, $endedDate, $totalAmount, $proofPath, &$rentalTransaction) {
+            $productSize = $product->productSizes()->where('size', $selectedSize)->lockForUpdate()->firstOrFail();
+            if ($productSize->stock <= 0) {
+                throw ValidationException::withMessages(['selected_size' => 'Selected size is out of stock.']);
+            }
             $rentalTransaction = \App\Models\RentalTransaction::create([
                 'trx_id' => 'RENTAL-' . \Str::random(8),
                 'user_id' => \Auth::id(),
@@ -139,18 +162,12 @@ class FrontController extends Controller
                 'started_at' => $startedDate,
                 'ended_at' => $endedDate,
                 'total_amount' => $totalAmount,
+                'payment_proof' => $proofPath,
+                'payment_method' => $request->payment_method,
                 'status' => \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
             ]);
             $productSize->decrement('stock');
         });
-        $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
-        $fullProofPath = \Storage::disk('public')->path($proofPath);
-        \Intervention\Image\Facades\Image::make($fullProofPath)->save($fullProofPath, 80);
-        $rentalTransaction->update([
-            'payment_proof' => $proofPath,
-            'payment_method' => $request->payment_method,
-            'status' => \App\Enums\RentalTransactionStatus::PENDING_PAYMENT_VERIFICATION,
-        ]);
         return redirect()->route('front.success.booking', $rentalTransaction->trx_id);
     }
 
@@ -158,11 +175,15 @@ class FrontController extends Controller
     {
         $transaction = RentalTransaction::where('trx_id', $transactionId)->first();
         if (!$transaction) {
-            $transaction = CustomTransaction::where('trx_id', $transactionId)->first();
-        }
-        if (!$transaction) {
+            // A custom transaction has no product, and this view reads
+            // $transaction->product — previously that crashed with a 500.
+            $custom = CustomTransaction::where('trx_id', $transactionId)->first();
+            if ($custom) {
+                return redirect()->route('front.custom.success', $custom->trx_id);
+            }
             abort(404);
         }
+        $this->authorizeTransactionOwner($transaction);
         return view('front.success_booking', compact('transaction'));
     }
 
@@ -192,7 +213,10 @@ class FrontController extends Controller
             ->where('phone_number', $phone_number)
             ->first();
         if ($customDetails) {
-            return redirect()->route('front.custom.details', $customDetails->trx_id);
+            // Render directly instead of redirecting: the custom details
+            // route is owner-only, so a redirect would 403 the very user
+            // who just proved ownership with their phone number.
+            return view('front.custom_transaction_details', ['details' => $customDetails]);
         }
         return back()->withErrors(['error' => 'Transactions not found.']);
     }
@@ -291,21 +315,18 @@ class FrontController extends Controller
         unset($validatedData['full_name']);
 
         $image1Path = $request->file('image_reference_1')->store('custom_kebaya_references', 'public');
-        $fullPath1 = Storage::disk('public')->path($image1Path);
-        Image::make($fullPath1)->save($fullPath1, 80);  // Optimize image with Intervention Image
+        $this->optimizeUploadedImage($image1Path);  // Optimize image with Intervention Image
         $validatedData['image_reference'] = $image1Path;
 
         if ($request->hasFile('image_reference_2')) {
             $image2Path = $request->file('image_reference_2')->store('custom_kebaya_references', 'public');
-            $fullPath2 = Storage::disk('public')->path($image2Path);
-            Image::make($fullPath2)->save($fullPath2, 80);  // Optimize image with Intervention Image
+            $this->optimizeUploadedImage($image2Path);  // Optimize image with Intervention Image
             $validatedData['image_reference_2'] = $image2Path;
         }
 
         if ($request->hasFile('image_reference_3')) {
             $image3Path = $request->file('image_reference_3')->store('custom_kebaya_references', 'public');
-            $fullPath3 = Storage::disk('public')->path($image3Path);
-            Image::make($fullPath3)->save($fullPath3, 80);  // Optimize image with Intervention Image
+            $this->optimizeUploadedImage($image3Path);  // Optimize image with Intervention Image
             $validatedData['image_reference_3'] = $image3Path;
         }
 
@@ -320,7 +341,7 @@ class FrontController extends Controller
 
     public function contact()
     {
-        $comments = Comment::latest()->get();  // Mengambil data komentar dari database
+        $comments = Comment::latest()->paginate(10);  // Mengambil data komentar dari database
         return view('front.contact', compact('comments'));  // Mengirim data ke tampilan
     }
 
@@ -330,6 +351,7 @@ class FrontController extends Controller
         if (!$details) {
             abort(404);
         }
+        $this->authorizeTransactionOwner($details);
         return view('front.custom_transaction_details', compact('details'));
     }
 
@@ -339,11 +361,13 @@ class FrontController extends Controller
         if (!$transaction) {
             abort(404);
         }
+        $this->authorizeTransactionOwner($transaction);
         return view('front.custom_success', compact('transaction'));
     }
 
     public function uploadCustomPaymentProof(Request $request, CustomTransaction $customTransaction)
     {
+        $this->authorizeTransactionOwner($customTransaction);
         $request->validate([
             'payment_proof' => ['required', 'image', 'mimes:jpg,png'],
             'payment_method' => ['required', 'string', 'in:BCA,BRI'],
@@ -352,8 +376,7 @@ class FrontController extends Controller
         $proofPath = $request
             ->file('payment_proof')
             ->store('custom_payment_proofs', 'public');
-        $fullProofPath = Storage::disk('public')->path($proofPath);
-        Image::make($fullProofPath)->save($fullProofPath, 80);  // Optimize image with Intervention Image
+        $this->optimizeUploadedImage($proofPath);  // Optimize image with Intervention Image
         $customTransaction->update([
             'payment_proof' => $proofPath,
             'payment_method' => $request->payment_method,
@@ -364,6 +387,7 @@ class FrontController extends Controller
 
     public function cancelCustomOrder(CustomTransaction $customTransaction)
     {
+        $this->authorizeTransactionOwner($customTransaction);
         if ($customTransaction->status === CustomTransactionStatus::PENDING || $customTransaction->status === CustomTransactionStatus::PENDING_PAYMENT_VERIFICATION) {
             $customTransaction->update(['status' => CustomTransactionStatus::CANCELLED]);
             return back()->with('success', 'Custom order cancelled successfully.');
@@ -378,6 +402,7 @@ class FrontController extends Controller
 
     public function cancelRentalOrder(RentalTransaction $rentalTransaction)
     {
+        $this->authorizeTransactionOwner($rentalTransaction);
         if (
             $rentalTransaction->status !== RentalTransactionStatus::COMPLETED &&
             $rentalTransaction->status !== RentalTransactionStatus::REJECTED &&
@@ -390,6 +415,46 @@ class FrontController extends Controller
             return back()->with('success', 'Rental order cancelled successfully.');
         }
         return back()->withErrors(['error' => 'Rental order cannot be cancelled at this stage.']);
+    }
+
+    /**
+     * Only the transaction's owner (or an admin) may view, cancel, or
+     * upload a payment proof for it. Previously cancelRentalOrder,
+     * cancelCustomOrder and uploadCustomPaymentProof never checked
+     * ownership at all — any logged-in user could cancel or overwrite
+     * anyone else's order just by guessing its ID.
+     * Transactions without a user_id (legacy records) are allowed
+     * through, since there is no owner to compare against.
+     */
+    private function authorizeTransactionOwner($transaction): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+        if ($user->role === 'admin') {
+            return;
+        }
+        if ($transaction->user_id && (int) $transaction->user_id !== (int) $user->id) {
+            abort(403);
+        }
+    }
+
+    /**
+     * Downscale an uploaded image to at most 1600px wide (keeping aspect
+     * ratio, never upscaling) and re-encode at quality 80. Previously
+     * uploads were only re-saved at quality 80, so full-resolution phone
+     * photos were stored and served as-is on every page that shows them.
+     */
+    private function optimizeUploadedImage(string $path): void
+    {
+        $fullPath = Storage::disk('public')->path($path);
+        Image::make($fullPath)
+            ->resize(1600, null, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })
+            ->save($fullPath, 80);
     }
 
     public function redirectToGoogle()
@@ -447,8 +512,7 @@ class FrontController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('comment_images', 'public');
-            $fullImagePath = Storage::disk('public')->path($imagePath);
-            Image::make($fullImagePath)->save($fullImagePath, 80);  // Optimize image with Intervention Image
+            $this->optimizeUploadedImage($imagePath);  // Optimize image with Intervention Image
         }
         Comment::create([
             'user_id' => Auth::id(),

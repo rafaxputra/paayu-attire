@@ -18,21 +18,35 @@
 
     <section id="Thumbnail" class="d-flex flex-column align-items-center justify-content-center position-relative card mx-3" style="height: 400px; padding-top: 0; padding-bottom: 66px;">
         <div class="w-100 h-100 d-flex align-items-center justify-content-center flex-shrink-0">
-            <img id="mainThumbnail" src="{{ Storage::url($product->thumbnail) }}" alt="Thumbnail"
-                 class="img-fluid object-fit-cover transition-opacity duration-500 ease-in-out h-100 rounded-3" />
+            <img id="mainThumbnail" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}"
+                 class="img-fluid object-fit-cover transition-opacity duration-500 ease-in-out h-100 rounded-3"
+                 role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#imageLightbox"
+                 aria-label="Perbesar gambar" style="cursor: zoom-in;" />
         </div>
         <div class="d-flex gap-3 position-absolute" style="bottom: 30px; width: 100%; justify-content: center;">
-            <button class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0 thumbnail-active-ring" style="width: 70px; height: 70px;">
+            <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0 thumbnail-active-ring" style="width: 70px; height: 70px;" aria-label="Lihat gambar utama">
                 <img src="{{ Storage::url($product->thumbnail) }}" alt="Thumbnail" class="rounded-circle object-fit-cover" style="width: 100%; height: 100%;" />
             </button>
             @forelse ($product->photos as $photo)
-            <button class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 70px; height: 70px;">
+            <button type="button" class="thumbnail-button btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 70px; height: 70px;" aria-label="Lihat gambar {{ $loop->iteration + 1 }}">
                 <img src="{{ Storage::url($photo->photo) }}" alt="Thumbnail" class="img-fluid rounded-circle object-fit-cover" style="width: 100%; height: 100%;" />
             </button>
             @empty
             @endforelse
         </div>
     </section>
+
+    {{-- Lightbox: tap the main image to see it enlarged. --}}
+    <div class="modal fade" id="imageLightbox" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body p-0 position-relative">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1;"></button>
+                    <img id="lightboxImage" src="{{ Storage::url($product->thumbnail) }}" alt="{{ $product->name }}" class="img-fluid w-100 rounded-3" style="max-height: 80vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <section id="Details" class="d-flex flex-column mt-4 px-3 w-100 gap-3">
         <div id="Heading" class="d-flex align-items-center justify-content-between">

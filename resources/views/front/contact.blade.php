@@ -84,6 +84,10 @@
                     <p class="text-muted">No comments yet.</p>
                 @endforelse
             </div>
+
+            <div class="d-flex justify-content-center mt-3">
+                {{ $comments->links() }}
+            </div>
         </div>
     </section>
 
