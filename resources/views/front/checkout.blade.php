@@ -157,5 +157,5 @@
 @endsection
 
 @push('after-scripts')
-<script src="{{ asset('customjs/checkout.js') }}"></script>
+<script src="/customjs/checkout.js"></script>
 @endpush

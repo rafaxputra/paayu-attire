@@ -39,7 +39,14 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            // Host-relative on purpose: the previous value
+            // env('APP_URL').'/storage' baked the .env APP_URL
+            // (typically http://localhost:8000) into every
+            // Storage::url(), so thumbnails / payment proofs pointed at
+            // localhost even when the app was opened via a forwarded
+            // (dev tunnel) URL. '/storage' resolves against whatever
+            // host the page was loaded from, localhost or tunnel alike.
+            'url' => '/storage',
             'visibility' => 'public',
             'throw' => false,
         ],

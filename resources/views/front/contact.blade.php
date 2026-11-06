@@ -76,7 +76,7 @@
                         <p class="mb-2 text-muted">{{ $comment->comment }}</p>
                         @if ($comment->image)
                             <div class="mt-2">
-                                <img src="{{ asset('storage/' . $comment->image) }}" alt="Comment Image" class="img-fluid rounded" style="max-width: 150px;">
+                                <img src="{{ '/storage/' . $comment->image }}" alt="Comment Image" class="img-fluid rounded" style="max-width: 150px;">
                             </div>
                         @endif
                     </div>

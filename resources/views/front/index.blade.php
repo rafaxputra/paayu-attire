@@ -10,7 +10,7 @@
 <main class="main-content-container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 px-3 pe-3">
         <a href="{{ route('front.index') }}" class="d-flex align-items-center ms-2">
-            <img id="paayu-logo" src="{{ asset('assets/images/logos/paayu_light_mode.png') }}" alt="Paayu Attire Logo" style="height: 30px;" />
+            <img id="paayu-logo" src="/assets/images/logos/paayu_light_mode.png" alt="Paayu Attire Logo" style="height: 30px;" />
         </a>
         <div class="d-flex align-items-center gap-3">
             <button id="theme-toggle" class="btn p-0">
@@ -104,5 +104,5 @@
 
 @push('after-scripts')
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script src="{{ asset('customjs/browse.js') }}"></script>
+<script src="/customjs/browse.js"></script>
 @endpush

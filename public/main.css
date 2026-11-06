@@ -104,7 +104,7 @@ html[data-bs-theme="dark"] .btn-primary {
 
 html[data-bs-theme="dark"] .btn-outline-secondary {
     color: var(--text-color);
-    border-color: var(--border-color);
+    border-color: var(--card-border);
 }
 
 html[data-bs-theme="dark"] .btn-outline-secondary:hover {

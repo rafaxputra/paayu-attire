@@ -112,5 +112,5 @@
 @endsection
 
 @push('after-scripts')
-<script src="{{ asset('customjs/booking.js') }}"></script>
+<script src="/customjs/booking.js"></script>
 @endpush

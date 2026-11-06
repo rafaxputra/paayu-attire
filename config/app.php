@@ -56,6 +56,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Asset URL
+    |--------------------------------------------------------------------------
+    |
+    | Stock Laravel key (was missing from this config). Leave ASSET_URL
+    | unset in normal use: asset() then builds URLs from the current
+    | request, which — once trusted proxies are configured in
+    | bootstrap/app.php — is the forwarded (dev tunnel) host/scheme.
+    | Set ASSET_URL only to point assets at a CDN / separate domain.
+    |
+    */
+
+    'asset_url' => env('ASSET_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

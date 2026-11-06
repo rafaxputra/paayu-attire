@@ -134,5 +134,5 @@
 @endsection
 
 @push('after-scripts')
-<script src="{{ asset('customjs/details.js') }}"></script>
+<script src="/customjs/details.js"></script>
 @endpush
